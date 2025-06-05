@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: techm-log-automation
+    env: python
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate"
+    startCommand: "gunicorn log_manager.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: log_manager.settings
+      - key: PYTHON_VERSION
+        value: 3.10
