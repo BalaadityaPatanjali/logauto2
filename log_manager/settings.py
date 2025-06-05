@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-replace-this-secret'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['log-auto.onrender.com', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'app',
