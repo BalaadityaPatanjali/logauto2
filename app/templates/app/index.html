@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -258,42 +259,82 @@
       <!-- Log Output -->
       <div class="card" id="log-output">
         <h3>Execution Output</h3>
-        <pre id="log">Waiting for execution...</pre>
+        <!-- Manual Search -->
+<div style="margin-bottom: 1rem;">
+  <input type="text" id="log-search" placeholder="Search logs..." style="padding: 0.5rem; width: 60%;">
+  <button onclick="searchLog()" style="padding: 0.5rem 1rem; background-color: #28a745; color: white; border: none; border-radius: 6px;">🔍 Search</button>
+</div>
+        <pre id="log"><code>{{ log|default:"Waiting for execution..." }}</code></pre>
+        <button type="button" id="summarize-btn" class="btn" style="margin-top: 1rem;">🧠 Summarize Logs</button>
+<div id="summary-output" class="card" style="margin-top: 1rem; white-space: pre-wrap;"></div>
+      </div>
+      <div style="margin-top: 1rem;">
+    <a href="{% static 'logs/' %}{{ log_file_name }}" download class="btn" style="padding: 0.5rem 1rem; background-color: #007bff; color: white; border-radius: 8px; text-decoration: none;">
+      ⬇️ Download Log File
+       </a>
       </div>
     </form>
   </div>
 
-  <script>
-    // Toggle radio buttons
-    document.querySelectorAll('input[type="radio"]').forEach(radio => {
-      radio.addEventListener('click', function () {
-        if (this.checked && this.dataset.waschecked === "true") {
-          this.checked = false;
-          this.dataset.waschecked = "false";
-        } else {
-          document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => r.dataset.waschecked = "false");
-          this.dataset.waschecked = "true";
-        }
+<script>
+  // Toggle radio buttons
+  document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    radio.addEventListener('click', function () {
+      if (this.checked && this.dataset.waschecked === "true") {
+        this.checked = false;
+        this.dataset.waschecked = "false";
+      } else {
+        document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => r.dataset.waschecked = "false");
+        this.dataset.waschecked = "true";
+      }
 
-        // Update selection summary
-        const selectedApp = document.querySelector('input[name="application"]:checked')?.value || "None";
-        const selectedCluster = document.querySelector('input[name="cluster"]:checked')?.value || "None";
-        const selectedTest = document.querySelector('input[name="testtype"]:checked')?.value || "None";
-        document.getElementById('selection-summary').innerHTML =
-          `Selected → <strong>App:</strong> ${selectedApp}, <strong>Cluster:</strong> ${selectedCluster}, <strong>Test:</strong> ${selectedTest}`;
-      });
+      // Update selection summary
+      const selectedApp = document.querySelector('input[name="application"]:checked')?.value || "None";
+      const selectedCluster = document.querySelector('input[name="cluster"]:checked')?.value || "None";
+      const selectedTest = document.querySelector('input[name="testtype"]:checked')?.value || "None";
+      document.getElementById('selection-summary').innerHTML =
+        `Selected → <strong>App:</strong> ${selectedApp}, <strong>Cluster:</strong> ${selectedCluster}, <strong>Test:</strong> ${selectedTest}`;
+    });
+  });
+
+  // Summarize Logs using AI
+  document.getElementById("summarize-btn").addEventListener("click", async () => {
+    const logText = document.getElementById("log").textContent;
+    const btn = document.getElementById("summarize-btn");
+    const output = document.getElementById("summary-output");
+
+    btn.disabled = true;
+    btn.textContent = "Summarizing...";
+    output.textContent = "";
+
+    const response = await fetch("/summarize/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        log_text: logText
+      })
     });
 
-    // Fake test result output
-    document.querySelector('form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const app = document.querySelector('input[name="application"]:checked')?.value;
-      const cluster = document.querySelector('input[name="cluster"]:checked')?.value;
-      const test = document.querySelector('input[name="testtype"]:checked')?.value;
-      if (!app || !cluster || !test) return alert("Please select all required options.");
-      document.getElementById('log').textContent =
-        `▶ Starting ${test} for ${app} on ${cluster}...\n✔ All tests passed successfully.\n📄 Logs saved to /tmp/logs/${app}-${test}.log`;
-    });
-  </script>
+    const result = await response.json();
+    output.textContent = result.summary;
+    btn.disabled = false;
+    btn.textContent = "🧠 Summarize Logs";
+  });
+
+  // Search Logs for Keyword
+  function searchLog() {
+    const keyword = document.getElementById('log-search').value.toLowerCase();
+    const logPre = document.querySelector("#log code");
+    const originalText = logPre.innerText;
+
+    // Highlight keyword matches
+    const regex = new RegExp(`(${keyword})`, 'gi');
+    const highlighted = originalText.replace(regex, `<mark style="background-color: yellow;">$1</mark>`);
+
+    logPre.innerHTML = highlighted || originalText;
+  }
+</script>
 </body>
 </html>

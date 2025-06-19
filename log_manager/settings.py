@@ -1,5 +1,8 @@
 from pathlib import Path
 import os
+import dotenv
+
+dotenv.load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -51,6 +54,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'app' / 'static']
 
 if os.getenv("RENDER", "") != "":
+    # for deployment on Render
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    # for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
