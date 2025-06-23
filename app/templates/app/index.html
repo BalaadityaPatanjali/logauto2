@@ -96,18 +96,17 @@
       cursor: pointer;
       font-weight: bold;
       min-width: 120px;
-      box-shadow: none;
     }
 
     .btn:hover {
       background-color: var(--accent);
     }
 
-    input[type="radio"], input[type="text"], textarea {
+    input[type="radio"], input[type="text"], select {
       margin-bottom: 0.7rem;
     }
 
-    input[type="text"], textarea {
+    input[type="text"], select {
       width: 100%;
       padding: 0.6rem;
       border: 1px solid var(--border);
@@ -153,24 +152,23 @@
       <div class="collapsible-section">
         <div class="collapsible-header" onclick="toggleSection('cluster-options')">▾ Azure Cluster</div>
         <div class="collapsible-body open" id="cluster-options">
-          {% for i in "1234" %}
-            <label><input type="radio" name="cluster" value="cluster{{ i }}" {% if forloop.first %}required{% endif %}> Cluster Prod AKS {{ i }}</label>
-          {% endfor %}
+          <select name="cluster" id="cluster-select" required>
+            <option value="">Select Cluster</option>
+            {% for i in "1234" %}
+              <option value="cluster{{ i }}">Cluster Prod AKS {{ i }}</option>
+            {% endfor %}
+          </select>
         </div>
       </div>
 
       <div class="collapsible-section">
-        <div class="collapsible-header" onclick="toggleSection('test-options')">▾ Test Type</div>
-        <div class="collapsible-body open" id="test-options">
-          <label><input type="radio" name="testtype" value="unit" required> Unit Test</label>
-          <label><input type="radio" name="testtype" value="integration"> Integration Test</label>
-          <label><input type="radio" name="testtype" value="load"> Load Test</label>
-          <label><input type="radio" name="testtype" value="e2e"> End-to-End Test</label>
+        <div class="collapsible-header" onclick="toggleSection('bundle-options')">▾ Bundle Name</div>
+        <div class="collapsible-body open" id="bundle-options">
+          <select name="testtype" id="bundle-select" required>
+            <option value="">Select Bundle</option>
+          </select>
         </div>
       </div>
-
-      <h3>Custom Config</h3>
-      <textarea rows="6" placeholder="Paste your YAML/JSON config here..."></textarea>
 
       {% if log_file_name %}
         <div class="output-actions">
@@ -199,41 +197,27 @@
     function toggleSection(id) {
       const section = document.getElementById(id);
       const header = section.previousElementSibling;
-
       section.classList.toggle('open');
-      if (section.classList.contains('open')) {
-        header.innerHTML = header.innerHTML.replace('▸', '▾');
-      } else {
-        header.innerHTML = header.innerHTML.replace('▾', '▸');
-      }
+      header.innerHTML = section.classList.contains('open') ? header.innerHTML.replace('▸', '▾') : header.innerHTML.replace('▾', '▸');
     }
 
     function searchLog() {
       const keyword = document.getElementById('log-search').value.toLowerCase();
       const logPre = document.querySelector("#log code");
       const originalText = logPre.innerText;
-
-      if (!keyword) {
-        logPre.innerHTML = originalText;
-        return;
-      }
-
-      const regex = new RegExp(`(${keyword})`, 'gi');
-      const highlighted = originalText.replace(regex, `<mark style="background-color: yellow;">$1</mark>`);
-      logPre.innerHTML = highlighted;
+      if (!keyword) return logPre.innerHTML = originalText;
+      logPre.innerHTML = originalText.replace(new RegExp(`(${keyword})`, 'gi'), `<mark style="background-color: yellow;">$1</mark>`);
     }
 
     document.getElementById("summarize-btn").addEventListener("click", async () => {
       const logText = document.getElementById("log").textContent;
       const output = document.getElementById("summary-output");
       output.textContent = "Summarizing...";
-
       const response = await fetch("/summarize/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ log_text: logText })
       });
-
       const result = await response.json();
       output.textContent = `Summary:\n${result.summary}`;
     });
@@ -242,16 +226,47 @@
       const logText = document.getElementById("log").textContent;
       const output = document.getElementById("summary-output");
       output.textContent += "\n\nAnalyzing root cause...";
-
       const response = await fetch("/analyze/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ log_text: logText })
       });
-
       const result = await response.json();
       output.textContent += `\n\nRCA:\n${result.analysis}`;
     });
+
+    const bundleMap = {
+      app1: {
+        cluster1: ["Bundle 1", "Bundle 2"],
+        cluster2: ["Bundle 3"],
+        cluster3: ["Bundle 4"]
+      },
+      app2: {
+        cluster1: ["Bundle A"],
+        cluster2: ["Bundle B", "Bundle C"]
+      }
+    };
+
+    const appRadios = document.querySelectorAll("input[name='application']");
+    const clusterSelect = document.getElementById("cluster-select");
+    const bundleSelect = document.getElementById("bundle-select");
+
+    function updateBundles() {
+      const selectedApp = document.querySelector("input[name='application']:checked")?.value;
+      const selectedCluster = clusterSelect.value;
+      bundleSelect.innerHTML = "<option value=''>Select Bundle</option>";
+      if (selectedApp && selectedCluster && bundleMap[selectedApp] && bundleMap[selectedApp][selectedCluster]) {
+        bundleMap[selectedApp][selectedCluster].forEach(bundle => {
+          const opt = document.createElement("option");
+          opt.value = bundle.toLowerCase().replace(/\s+/g, '-');
+          opt.textContent = bundle;
+          bundleSelect.appendChild(opt);
+        });
+      }
+    }
+
+    appRadios.forEach(radio => radio.addEventListener("change", updateBundles));
+    clusterSelect.addEventListener("change", updateBundles);
   </script>
 </body>
 </html>

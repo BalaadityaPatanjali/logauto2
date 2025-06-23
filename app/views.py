@@ -13,9 +13,9 @@ def index(request):
     if request.method == 'POST':
         app = request.POST.get('application')
         cluster = request.POST.get('cluster')
-        testtype = request.POST.get('testtype')
+        bundle = request.POST.get('testtype')  # testtype holds the bundle name now
 
-        log_file_name = f"{app}-{testtype}.log"
+        log_file_name = f"{app}-{bundle}.log"
         log_file_path = f"app/static/logs/{log_file_name}"
 
         if os.path.exists(log_file_path):
@@ -29,7 +29,7 @@ def index(request):
         context.update({
             "selected_app": app,
             "selected_cluster": cluster,
-            "selected_test": testtype,
+            "selected_test": bundle,  # still passed as 'selected_test' for compatibility
         })
 
     return render(request, 'app/index.html', context)
