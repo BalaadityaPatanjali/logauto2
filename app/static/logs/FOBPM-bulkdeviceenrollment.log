@@ -1,0 +1,82 @@
+2025-06-24T08:15:01.234Z INFO [main] com.example.app.Application - Starting Application v2.1.3 on webapp-deployment-7d6b9c8f4d-x7k2m with PID 1
+2025-06-24T08:15:01.245Z INFO [main] com.example.app.Application - Running with Spring Boot v2.7.0, Spring v5.3.21
+2025-06-24T08:15:01.246Z INFO [main] com.example.app.Application - No active profile set, falling back to default profiles: default
+2025-06-24T08:15:02.123Z INFO [main] o.s.b.w.embedded.tomcat.TomcatWebServer - Tomcat initialized with port(s): 8080 (http)
+2025-06-24T08:15:02.134Z INFO [main] o.apache.catalina.core.StandardService - Starting service [Tomcat]
+2025-06-24T08:15:02.135Z INFO [main] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.63]
+2025-06-24T08:15:02.201Z INFO [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-06-24T08:15:02.202Z INFO [main] w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 925 ms
+2025-06-24T08:15:02.567Z INFO [main] o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+2025-06-24T08:15:02.612Z INFO [main] o.s.b.w.embedded.tomcat.TomcatWebServer - Tomcat started on port(s): 8080 (http) with context path ''
+2025-06-24T08:15:02.621Z INFO [main] com.example.app.Application - Started Application in 1.498 seconds (JVM running for 2.103)
+2025-06-24T08:15:03.001Z INFO [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-24T08:15:03.002Z INFO [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-06-24T08:15:03.003Z INFO [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2025-06-24T08:15:03.045Z INFO [http-nio-8080-exec-1] c.e.app.controller.HealthController - Health check requested from 10.244.1.1
+2025-06-24T08:15:08.234Z INFO [http-nio-8080-exec-2] c.e.app.controller.UserController - GET /api/users requested
+2025-06-24T08:15:08.245Z DEBUG [http-nio-8080-exec-2] c.e.app.service.UserService - Fetching all users from database
+2025-06-24T08:15:08.267Z DEBUG [http-nio-8080-exec-2] c.e.app.repository.UserRepository - Executing query: SELECT * FROM users WHERE active = true
+2025-06-24T08:15:08.289Z INFO [http-nio-8080-exec-2] c.e.app.service.UserService - Retrieved 147 active users
+2025-06-24T08:15:08.291Z INFO [http-nio-8080-exec-2] c.e.app.controller.UserController - Returning 147 users, response time: 57ms
+2025-06-24T08:15:12.445Z INFO [http-nio-8080-exec-3] c.e.app.controller.AuthController - Login attempt for user: john.doe@example.com
+2025-06-24T08:15:12.456Z DEBUG [http-nio-8080-exec-3] c.e.app.service.AuthService - Validating credentials for user ID: 12345
+2025-06-24T08:15:12.467Z INFO [http-nio-8080-exec-3] c.e.app.service.AuthService - Authentication successful for user: john.doe@example.com
+2025-06-24T08:15:12.478Z INFO [http-nio-8080-exec-3] c.e.app.service.TokenService - JWT token generated for user ID: 12345
+2025-06-24T08:15:15.123Z INFO [http-nio-8080-exec-4] c.e.app.controller.ProductController - GET /api/products?category=electronics requested
+2025-06-24T08:15:15.134Z DEBUG [http-nio-8080-exec-4] c.e.app.service.ProductService - Filtering products by category: electronics
+2025-06-24T08:15:15.167Z INFO [http-nio-8080-exec-4] c.e.app.service.ProductService - Found 23 products matching criteria
+2025-06-24T08:15:18.234Z WARN [http-nio-8080-exec-5] c.e.app.controller.UserController - Attempt to access user profile without authentication
+2025-06-24T08:15:18.235Z INFO [http-nio-8080-exec-5] c.e.app.security.AuthFilter - Returning 401 Unauthorized
+2025-06-24T08:15:22.345Z INFO [http-nio-8080-exec-6] c.e.app.controller.OrderController - POST /api/orders requested
+2025-06-24T08:15:22.356Z DEBUG [http-nio-8080-exec-6] c.e.app.service.OrderService - Creating new order for user ID: 12345
+2025-06-24T08:15:22.367Z DEBUG [http-nio-8080-exec-6] c.e.app.service.InventoryService - Checking inventory for product ID: 67890
+2025-06-24T08:15:22.378Z INFO [http-nio-8080-exec-6] c.e.app.service.InventoryService - Product in stock: quantity=15
+2025-06-24T08:15:22.412Z INFO [http-nio-8080-exec-6] c.e.app.service.PaymentService - Processing payment of $129.99
+2025-06-24T08:15:22.456Z INFO [http-nio-8080-exec-6] c.e.app.service.PaymentService - Payment processed successfully, transaction ID: TXN_2025062408152245601
+2025-06-24T08:15:22.467Z INFO [http-nio-8080-exec-6] c.e.app.service.OrderService - Order created successfully, order ID: ORD_2025062408152246701
+2025-06-24T08:15:25.123Z INFO [scheduler-1] c.e.app.task.ScheduledTasks - Running hourly cleanup task
+2025-06-24T08:15:25.134Z DEBUG [scheduler-1] c.e.app.service.CleanupService - Cleaning up expired sessions
+2025-06-24T08:15:25.145Z INFO [scheduler-1] c.e.app.service.CleanupService - Removed 3 expired sessions
+2025-06-24T08:15:25.156Z DEBUG [scheduler-1] c.e.app.service.CleanupService - Cleaning up temporary files
+2025-06-24T08:15:25.167Z INFO [scheduler-1] c.e.app.service.CleanupService - Removed 7 temporary files
+2025-06-24T08:15:28.234Z ERROR [http-nio-8080-exec-7] c.e.app.controller.ProductController - Error retrieving product details
+java.sql.SQLException: Connection is not available, request timed out after 30000ms.
+	at com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:695)
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:197)
+	at com.zaxxer.hikari.pool.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at com.example.app.repository.ProductRepository.findById(ProductRepository.java:45)
+	at com.example.app.service.ProductService.getProductById(ProductService.java:67)
+	at com.example.app.controller.ProductController.getProduct(ProductController.java:89)
+2025-06-24T08:15:28.245Z ERROR [http-nio-8080-exec-7] c.e.app.exception.GlobalExceptionHandler - Database connection timeout
+2025-06-24T08:15:28.246Z INFO [http-nio-8080-exec-7] c.e.app.controller.ProductController - Returning 500 Internal Server Error
+2025-06-24T08:15:30.123Z INFO [hikaricp-connection-adder] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection conn1: url=jdbc:postgresql://postgres-service:5432/appdb user=appuser
+2025-06-24T08:15:32.234Z INFO [http-nio-8080-exec-8] c.e.app.controller.ProductController - GET /api/products/12345 requested
+2025-06-24T08:15:32.245Z DEBUG [http-nio-8080-exec-8] c.e.app.service.ProductService - Retrieving product with ID: 12345
+2025-06-24T08:15:32.267Z INFO [http-nio-8080-exec-8] c.e.app.service.ProductService - Product found: Wireless Headphones
+2025-06-24T08:15:35.345Z INFO [http-nio-8080-exec-9] c.e.app.controller.UserController - PUT /api/users/12345 requested
+2025-06-24T08:15:35.356Z DEBUG [http-nio-8080-exec-9] c.e.app.service.UserService - Updating user profile for ID: 12345
+2025-06-24T08:15:35.367Z DEBUG [http-nio-8080-exec-9] c.e.app.service.ValidationService - Validating user data
+2025-06-24T08:15:35.378Z INFO [http-nio-8080-exec-9] c.e.app.service.UserService - User profile updated successfully
+2025-06-24T08:15:38.123Z INFO [http-nio-8080-exec-10] c.e.app.controller.SearchController - GET /api/search?q=laptop requested
+2025-06-24T08:15:38.134Z DEBUG [http-nio-8080-exec-10] c.e.app.service.SearchService - Performing search with query: laptop
+2025-06-24T08:15:38.167Z INFO [http-nio-8080-exec-10] c.e.app.service.SearchService - Search completed, found 89 results
+2025-06-24T08:15:42.234Z WARN [http-nio-8080-exec-1] c.e.app.security.RateLimitFilter - Rate limit exceeded for IP: 192.168.1.45
+2025-06-24T08:15:42.235Z INFO [http-nio-8080-exec-1] c.e.app.security.RateLimitFilter - Returning 429 Too Many Requests
+2025-06-24T08:15:45.345Z INFO [http-nio-8080-exec-2] c.e.app.controller.NotificationController - POST /api/notifications requested
+2025-06-24T08:15:45.356Z DEBUG [http-nio-8080-exec-2] c.e.app.service.NotificationService - Creating notification for user ID: 12345
+2025-06-24T08:15:45.367Z INFO [http-nio-8080-exec-2] c.e.app.service.EmailService - Sending email notification to: john.doe@example.com
+2025-06-24T08:15:45.445Z INFO [http-nio-8080-exec-2] c.e.app.service.EmailService - Email sent successfully
+2025-06-24T08:15:48.123Z DEBUG [http-nio-8080-exec-3] c.e.app.controller.AnalyticsController - Recording page view: /products
+2025-06-24T08:15:48.134Z INFO [http-nio-8080-exec-3] c.e.app.service.AnalyticsService - Page view recorded for user ID: 12345
+2025-06-24T08:15:52.234Z INFO [http-nio-8080-exec-4] c.e.app.controller.ReviewController - POST /api/reviews requested
+2025-06-24T08:15:52.245Z DEBUG [http-nio-8080-exec-4] c.e.app.service.ReviewService - Creating review for product ID: 67890
+2025-06-24T08:15:52.256Z DEBUG [http-nio-8080-exec-4] c.e.app.service.ValidationService - Validating review content
+2025-06-24T08:15:52.267Z INFO [http-nio-8080-exec-4] c.e.app.service.ReviewService - Review created successfully, ID: REV_2025062408155226701
+2025-06-24T08:15:55.123Z INFO [async-1] c.e.app.service.RecommendationService - Updating recommendations for user ID: 12345
+2025-06-24T08:15:55.156Z DEBUG [async-1] c.e.app.service.RecommendationService - Analyzing user behavior patterns
+2025-06-24T08:15:55.189Z INFO [async-1] c.e.app.service.RecommendationService - Generated 15 product recommendations
+2025-06-24T08:15:58.234Z WARN [http-nio-8080-exec-5] c.e.app.controller.FileController - Large file upload detected: 25.6MB
+2025-06-24T08:15:58.245Z INFO [http-nio-8080-exec-5] c.e.app.service.FileService - Processing file upload: document.pdf
+2025-06-24T08:15:58.345Z INFO [http-nio-8080-exec-5] c.e.app.service.FileService - File uploaded successfully, ID: FILE_2025062408155834501
+2025-06-24T08:16:02.123Z ERROR [http-nio-8080-exec-6] c.e.app.service.ExternalApiService - Failed to connect to external service
+java.net.ConnectException: Connection refused (Connection refused)

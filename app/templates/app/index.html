@@ -4,269 +4,864 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Log Automation</title>
+  <title>LogOps</title>
   <style>
     :root {
-      --bg-dark: #1b1d1f;
-      --bg-light: #26282b;
-      --text: #e0e0e0;
-      --text-secondary: #a0a0a0;
-      --accent: #2e2e2e;
-      --border: #3a3a3a;
-      --input-bg: #2d2f31;
-      --highlight: #444;
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --bg-elevated: #30363d;
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-primary: #238636;
+      --accent-secondary: #1f6feb;
+      --accent-tertiary: #8b5cf6;
+      --accent-warning: #d29922;
+      --accent-danger: #da3633;
+      --border-default: #30363d;
+      --border-muted: #21262d;
+      --shadow-default: 0 16px 32px rgba(1, 4, 9, 0.85);
+      --shadow-elevated: 0 8px 24px rgba(1, 4, 9, 0.7);
+      --gradient-brand: linear-gradient(135deg, #1f6feb 0%, #8b5cf6 100%);
+      --gradient-success: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+      --gradient-warning: linear-gradient(135deg, #d29922 0%, #fb8500 100%);
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       display: flex;
       height: 100vh;
+      overflow: hidden;
+      line-height: 1.5;
     }
 
     .sidebar {
-      width: 280px;
-      background-color: var(--bg-light);
-      padding: 2rem 1rem;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      width: 320px;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border-default);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--gradient-brand);
+    }
+
+    .sidebar-header {
+      padding: 2rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border-muted);
+    }
+
+    .sidebar-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      padding: 1.5rem;
       overflow-y: auto;
     }
 
-    .sidebar h2 {
-      margin-bottom: 1rem;
-      color: var(--text);
+    .sidebar-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 3px;
+    }
+
+    .collapsible-section {
+      margin-bottom: 1.5rem;
     }
 
     .collapsible-header {
-      font-weight: bold;
-      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      color: var(--text-primary);
       cursor: pointer;
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-muted);
+      user-select: none;
+    }
+
+    .collapsible-header:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-default);
+      transform: translateY(-1px);
+    }
+
+    .collapsible-header .icon {
+      font-size: 0.875rem;
+      transition: transform 0.2s ease;
+      color: var(--accent-secondary);
+    }
+
+    .collapsible-header.collapsed .icon {
+      transform: rotate(-90deg);
     }
 
     .collapsible-body {
-      margin-left: 1rem;
+      margin-top: 0.75rem;
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.4s ease, padding 0.4s ease;
-      padding-top: 0;
-      padding-bottom: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+      opacity: 0;
     }
 
     .collapsible-body.open {
-      max-height: 500px;
-      padding-top: 0.5rem;
+      max-height: 300px;
+      opacity: 1;
       padding-bottom: 0.5rem;
     }
 
-    .collapsible-body label {
-      display: block;
-      margin-bottom: 0.3rem;
+    select, input[type="text"] {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23868e96' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.75rem center;
+      background-repeat: no-repeat;
+      background-size: 1rem;
+    }
+
+    input[type="text"] {
+      background-image: none;
+    }
+
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent-secondary);
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+      background: var(--bg-elevated);
+    }
+
+    .download-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-muted);
     }
 
     .main-content {
       flex: 1;
-      padding: 2rem;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary);
+      overflow: hidden;
     }
 
-    h3 {
-      color: var(--text-secondary);
-      margin-top: 2rem;
-      margin-bottom: 1rem;
+    .content-header {
+      padding: 2rem 2rem 1rem;
+      border-bottom: 1px solid var(--border-muted);
+      background: var(--bg-secondary);
+      flex-shrink: 0; /* Prevent header from shrinking */
     }
 
-    .card {
-      background-color: var(--bg-light);
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 2rem;
-      border: 1px solid var(--border);
+    .content-header h2 {
+      margin: 0 0 1rem 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
     }
 
-    .btn {
-      background-color: var(--highlight);
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 0.7rem 1.5rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      min-width: 120px;
-    }
-
-    .btn:hover {
-      background-color: var(--accent);
-    }
-
-    input[type="radio"], input[type="text"], select {
-      margin-bottom: 0.7rem;
-    }
-
-    input[type="text"], select {
-      width: 100%;
-      padding: 0.6rem;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background-color: var(--input-bg);
-      color: var(--text);
-    }
-
-    pre {
-      background-color: #181a1b;
-      color: #c8f7c5;
-      padding: 1rem;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin-top: 1rem;
-      white-space: pre-wrap;
-      border: 1px solid var(--border);
-    }
-
-    .output-actions {
+    .toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
-      margin-top: 1rem;
+      align-items: stretch;
+    }
+
+    .search-container {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-container::before {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    #log-search {
+      padding-left: 2.5rem;
+      margin: 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.25rem;
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      min-width: 120px;
+      white-space: nowrap;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: var(--gradient-brand);
+      color: white;
+      border-color: var(--accent-secondary);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .btn-success {
+      background: var(--gradient-success);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .btn-warning {
+      background: var(--gradient-warning);
+      color: white;
+      border-color: var(--accent-warning);
+    }
+
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-elevated);
+      transform: translateY(-1px);
+    }
+
+    /* FIXED: Updated output container layout */
+    .output-container {
+      flex: 1;
+      padding: 2rem;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 1fr 1fr; /* Split into two equal rows */
+      gap: 1.5rem;
+      min-height: 0; /* Important for proper grid sizing */
+    }
+
+    /* FIXED: Updated output card styling */
+    .output-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-default);
+      display: flex;
+      flex-direction: column;
+      min-height: 0; /* Important for proper flexbox sizing */
+    }
+
+    .output-header {
+      padding: 1rem 1.5rem;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex-shrink: 0; /* Prevent header from shrinking */
+    }
+
+    /* FIXED: Updated output content styling */
+    .output-content {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+      min-height: 0; /* Important for proper scrolling */
+    }
+
+    .output-content::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .output-content::-webkit-scrollbar-track {
+      background: var(--bg-tertiary);
+    }
+
+    .output-content::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 4px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 1.5rem;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      height: 100%; /* FIXED: Ensure pre takes full height */
+    }
+
+    #log {
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      border: 1px solid var(--border-default);
+    }
+
+    /* FIXED: Updated summary output styling */
+    #summary-output {
+      background: linear-gradient(135deg, #0f1419 0%, #1a1d23 100%);
+      border: 1px solid var(--border-default);
+      color: var(--accent-primary);
+    }
+
+    /* FIXED: Show summary card by default but make it collapsible */
+    #summary-card {
+      display: flex !important;
+    }
+
+    #summary-card.hidden {
+      display: none !important;
+    }
+
+    mark {
+      background: var(--accent-warning);
+      color: var(--bg-primary);
+      padding: 0.125rem 0.25rem;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+
+    .status-waiting {
+      background: var(--accent-warning);
+      animation: pulse 2s infinite;
+    }
+
+    .status-running {
+      background: var(--accent-secondary);
+      animation: pulse 1s infinite;
+    }
+
+    .status-complete {
+      background: var(--accent-primary);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border-default);
+      border-top: 2px solid var(--accent-secondary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* FIXED: Enhanced responsive design */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        height: 100vh;
+      }
+      
+      .sidebar {
+        width: 100%;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border-default);
+      }
+      
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .search-container {
+        min-width: unset;
+      }
+
+      /* FIXED: Mobile layout for output container */
+      .output-container {
+        grid-template-rows: 1fr 1fr; /* Maintain equal split on mobile */
+        padding: 1rem;
+      }
+    }
+
+    /* Animation for form submission */
+    .form-submitting .btn-primary {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* FIXED: Add toggle button for summary card */
+    .summary-toggle {
+      margin-left: auto;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .summary-toggle:hover {
+      background: var(--bg-tertiary);
     }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <h2>Log Automation</h2>
-    <form method="POST" id="test-form">
-      {% csrf_token %}
+    <div class="sidebar-header">
+      <h1>LogOps</h1>
+    </div>
+    
+    <div class="sidebar-content">
+      <form method="POST" id="test-form">
+        {% csrf_token %}
 
-      <div class="collapsible-section">
-        <div class="collapsible-header" onclick="toggleSection('app-options')">▾ Application</div>
-        <div class="collapsible-body open" id="app-options">
-          {% for i in "1234" %}
-            <label><input type="radio" name="application" value="app{{ i }}" {% if forloop.first %}required{% endif %}> Application {{ i }}</label>
-          {% endfor %}
+        <div class="collapsible-section">
+          <div class="collapsible-header" onclick="toggleSection('app-options')">
+            <span class="icon">▼</span>
+            <span>Application</span>
+          </div>
+          <div class="collapsible-body open" id="app-options">
+            <select name="application" id="app-select" required>
+              <option value="">Select Application</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div class="collapsible-section">
-        <div class="collapsible-header" onclick="toggleSection('cluster-options')">▾ Azure Cluster</div>
-        <div class="collapsible-body open" id="cluster-options">
-          <select name="cluster" id="cluster-select" required>
-            <option value="">Select Cluster</option>
-            {% for i in "1234" %}
-              <option value="cluster{{ i }}">Cluster Prod AKS {{ i }}</option>
-            {% endfor %}
-          </select>
+        <div class="collapsible-section">
+          <div class="collapsible-header" onclick="toggleSection('cluster-options')">
+            <span class="icon">▼</span>
+            <span>Azure Cluster</span>
+          </div>
+          <div class="collapsible-body open" id="cluster-options">
+            <select name="cluster" id="cluster-select" required>
+              <option value="">Select Cluster</option>
+              {% for i in "1234" %}
+                <option value="cluster{{ i }}">Cluster Prod AKS {{ i }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div class="collapsible-section">
-        <div class="collapsible-header" onclick="toggleSection('bundle-options')">▾ Bundle Name</div>
-        <div class="collapsible-body open" id="bundle-options">
-          <select name="testtype" id="bundle-select" required>
-            <option value="">Select Bundle</option>
-          </select>
+        <div class="collapsible-section">
+          <div class="collapsible-header" onclick="toggleSection('bundle-options')">
+            <span class="icon">▼</span>
+            <span>Bundle Name</span>
+          </div>
+          <div class="collapsible-body open" id="bundle-options">
+            <select name="testtype" id="bundle-select" required>
+              <option value="">Select Bundle</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      {% if log_file_name %}
-        <div class="output-actions">
-          <a href="{% static 'logs/' %}{{ log_file_name }}" download class="btn">Download</a>
-        </div>
-      {% endif %}
-    </form>
-  </div>
-
-  <div class="main-content">
-    <div class="card">
-      <h3>Execution Output</h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-        <input type="text" id="log-search" placeholder="Search logs..." style="flex: 1;" />
-        <button onclick="searchLog()" class="btn">Search</button>
-        <button type="submit" form="test-form" class="btn">Run Test</button>
-        <button type="button" id="summarize-btn" class="btn">Summarize</button>
-        <button type="button" id="analyze-btn" class="btn">RCA</button>
-      </div>
-      <pre id="log"><code>{{ log|default:"Waiting for execution..." }}</code></pre>
-      <pre id="summary-output"></pre>
+        {% if log_file_name %}
+          <div class="download-section">
+            <a href="{% static 'logs/' %}{{ log_file_name }}" download class="btn btn-secondary">
+              Download Log
+            </a>
+          </div>
+        {% endif %}
+      </form>
     </div>
   </div>
 
-  <script>
-    function toggleSection(id) {
-      const section = document.getElementById(id);
-      const header = section.previousElementSibling;
-      section.classList.toggle('open');
-      header.innerHTML = section.classList.contains('open') ? header.innerHTML.replace('▸', '▾') : header.innerHTML.replace('▾', '▸');
-    }
+  <div class="main-content">
+    <div class="content-header">
+      <h2>
+        <span class="status-indicator status-waiting"></span>
+        Execution Output
+      </h2>
+      <div class="toolbar">
+        <div class="search-container">
+          <input type="text" id="log-search" placeholder="Search logs..." />
+        </div>
+        <button onclick="searchLog()" class="btn btn-secondary">Search</button>
+        <button type="submit" form="test-form" class="btn btn-primary" id="run-test-btn">
+          ▶ Run Test
+        </button>
+        <button type="button" id="summarize-btn" class="btn btn-success">
+          Summarize
+        </button>
+        <button type="button" id="analyze-btn" class="btn btn-warning">
+          RCA
+        </button>
+      </div>
+    </div>
 
-    function searchLog() {
-      const keyword = document.getElementById('log-search').value.toLowerCase();
-      const logPre = document.querySelector("#log code");
-      const originalText = logPre.innerText;
-      if (!keyword) return logPre.innerHTML = originalText;
-      logPre.innerHTML = originalText.replace(new RegExp(`(${keyword})`, 'gi'), `<mark style="background-color: yellow;">$1</mark>`);
-    }
+    <div class="output-container">
+      <div class="output-card">
+        <div class="output-header">
+          Log Output
+        </div>
+        <div class="output-content">
+          <pre id="log"><code>{{ log|default:"Waiting for execution..." }}</code></pre>
+        </div>
+      </div>
 
-    document.getElementById("summarize-btn").addEventListener("click", async () => {
-      const logText = document.getElementById("log").textContent;
-      const output = document.getElementById("summary-output");
-      output.textContent = "Summarizing...";
-      const response = await fetch("/summarize/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ log_text: logText })
+      <div class="output-card" id="summary-card">
+        <div class="output-header">
+          AI Analysis
+          <button class="summary-toggle" onclick="toggleSummaryCard()">−</button>
+        </div>
+        <div class="output-content">
+          <pre id="summary-output">Click "Summarize" or "RCA" to generate AI analysis...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Enhanced toggle functionality
+  function toggleSection(id) {
+    const section = document.getElementById(id);
+    const header = section.previousElementSibling;
+    const icon = header.querySelector('.icon');
+    
+    section.classList.toggle('open');
+    header.classList.toggle('collapsed');
+    
+    if (section.classList.contains('open')) {
+      icon.textContent = '▼';
+    } else {
+      icon.textContent = '▶';
+    }
+  }
+
+  // FIXED: Add summary card toggle functionality
+  function toggleSummaryCard() {
+    const summaryCard = document.getElementById('summary-card');
+    const toggleBtn = document.querySelector('.summary-toggle');
+    const outputContainer = document.querySelector('.output-container');
+    
+    if (summaryCard.classList.contains('hidden')) {
+      summaryCard.classList.remove('hidden');
+      toggleBtn.textContent = '−';
+      outputContainer.style.gridTemplateRows = '1fr 1fr';
+    } else {
+      summaryCard.classList.add('hidden');
+      toggleBtn.textContent = '+';
+      outputContainer.style.gridTemplateRows = '1fr';
+    }
+  }
+
+  // Enhanced search with better UX
+  function searchLog() {
+    const keyword = document.getElementById('log-search').value.toLowerCase().trim();
+    const logPre = document.querySelector("#log code");
+    const originalText = logPre.getAttribute('data-original') || logPre.innerText;
+    
+    if (!logPre.getAttribute('data-original')) {
+      logPre.setAttribute('data-original', originalText);
+    }
+    
+    if (!keyword) {
+      logPre.innerHTML = originalText;
+      return;
+    }
+    
+    const highlighted = originalText.replace(
+      new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+      `<mark>$1</mark>`
+    );
+    
+    logPre.innerHTML = highlighted;
+    
+    // Scroll to first match
+    const firstMatch = logPre.querySelector('mark');
+    if (firstMatch) {
+      firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  // Search on Enter key
+  document.getElementById('log-search').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      searchLog();
+    }
+  });
+
+  // Clear search when input is empty
+  document.getElementById('log-search').addEventListener('input', function(e) {
+    if (!e.target.value.trim()) {
+      searchLog();
+    }
+  });
+
+  // Application configuration and dynamic loading
+  const clusterSelect = document.getElementById("cluster-select");
+  const bundleSelect = document.getElementById("bundle-select");
+  const appSelect = document.getElementById("app-select");
+  let appConfig = {};
+
+  // Load app configuration
+  fetch("/get-app-config/")
+    .then(res => res.json())
+    .then(data => {
+      appConfig = data;
+      appSelect.innerHTML = "<option value=''>Select Application</option>";
+      Object.keys(appConfig).forEach(appName => {
+        const opt = document.createElement("option");
+        opt.value = appName;
+        opt.textContent = appName;
+        appSelect.appendChild(opt);
       });
-      const result = await response.json();
-      output.textContent = `Summary:\n${result.summary}`;
+      bindAppEvents();
+    })
+    .catch(error => {
+      console.error('Error loading app config:', error);
+      // Add fallback options if needed
     });
 
-    document.getElementById("analyze-btn").addEventListener("click", async () => {
-      const logText = document.getElementById("log").textContent;
-      const output = document.getElementById("summary-output");
-      output.textContent += "\n\nAnalyzing root cause...";
-      const response = await fetch("/analyze/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ log_text: logText })
-      });
-      const result = await response.json();
-      output.textContent += `\n\nRCA:\n${result.analysis}`;
-    });
-
-    const bundleMap = {
-      app1: {
-        cluster1: ["Bundle 1", "Bundle 2"],
-        cluster2: ["Bundle 3"],
-        cluster3: ["Bundle 4"]
-      },
-      app2: {
-        cluster1: ["Bundle A"],
-        cluster2: ["Bundle B", "Bundle C"]
-      }
-    };
-
-    const appRadios = document.querySelectorAll("input[name='application']");
-    const clusterSelect = document.getElementById("cluster-select");
-    const bundleSelect = document.getElementById("bundle-select");
-
-    function updateBundles() {
-      const selectedApp = document.querySelector("input[name='application']:checked")?.value;
-      const selectedCluster = clusterSelect.value;
-      bundleSelect.innerHTML = "<option value=''>Select Bundle</option>";
-      if (selectedApp && selectedCluster && bundleMap[selectedApp] && bundleMap[selectedApp][selectedCluster]) {
-        bundleMap[selectedApp][selectedCluster].forEach(bundle => {
-          const opt = document.createElement("option");
-          opt.value = bundle.toLowerCase().replace(/\s+/g, '-');
-          opt.textContent = bundle;
-          bundleSelect.appendChild(opt);
-        });
-      }
-    }
-
-    appRadios.forEach(radio => radio.addEventListener("change", updateBundles));
+  function bindAppEvents() {
+    appSelect.addEventListener("change", updateBundles);
     clusterSelect.addEventListener("change", updateBundles);
-  </script>
+  }
+
+  function updateBundles() {
+    const selectedApp = appSelect.value;
+    const selectedCluster = clusterSelect.value;
+    bundleSelect.innerHTML = "<option value=''>Select Bundle</option>";
+    
+    if (selectedApp && selectedCluster && appConfig[selectedApp]) {
+      appConfig[selectedApp].bundles.forEach(bundle => {
+        const opt = document.createElement("option");
+        opt.value = bundle.toLowerCase().replace(/\s+/g, '-');
+        opt.textContent = bundle;
+        bundleSelect.appendChild(opt);
+      });
+    }
+  }
+
+  // Enhanced CSRF token helper
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Enhanced button states
+  function setButtonLoading(button, isLoading) {
+    const originalText = button.getAttribute('data-original-text') || button.innerHTML;
+    if (!button.getAttribute('data-original-text')) {
+      button.setAttribute('data-original-text', originalText);
+    }
+    
+    if (isLoading) {
+      button.innerHTML = '<span class="loading-spinner"></span> Processing...';
+      button.disabled = true;
+    } else {
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }
+  }
+
+  // Update status indicator
+  function updateStatus(status) {
+    const indicator = document.querySelector('.status-indicator');
+    indicator.className = `status-indicator status-${status}`;
+  }
+
+  // FIXED: Enhanced summarize functionality
+  document.getElementById("summarize-btn").addEventListener("click", function () {
+    const log = document.querySelector("#log code").innerText;
+    if (log === "Waiting for execution...") {
+      alert("No log data to summarize");
+      return;
+    }
+    
+    setButtonLoading(this, true);
+    // Show summary card if hidden
+    const summaryCard = document.getElementById('summary-card');
+    if (summaryCard.classList.contains('hidden')) {
+      toggleSummaryCard();
+    }
+    document.getElementById("summary-output").innerText = "Generating summary...";
+    
+    fetch("/summarize/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: new URLSearchParams({ log_text: log })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("summary-output").innerText = data.summary || "No summary generated.";
+    })
+    .catch(error => {
+      document.getElementById("summary-output").innerText = "Error generating summary: " + error.message;
+    })
+    .finally(() => {
+      setButtonLoading(this, false);
+    });
+  });
+
+  // FIXED: Enhanced RCA functionality
+  document.getElementById("analyze-btn").addEventListener("click", function () {
+    const log = document.querySelector("#log code").innerText;
+    if (log === "Waiting for execution...") {
+      alert("No log data to analyze");
+      return;
+    }
+    
+    setButtonLoading(this, true);
+    // Show summary card if hidden
+    const summaryCard = document.getElementById('summary-card');
+    if (summaryCard.classList.contains('hidden')) {
+      toggleSummaryCard();
+    }
+    document.getElementById("summary-output").innerText = "Performing root cause analysis...";
+    
+    fetch("/analyze/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: new URLSearchParams({ log_text: log })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("summary-output").innerText = data.analysis || "No analysis generated.";
+    })
+    .catch(error => {
+      document.getElementById("summary-output").innerText = "Error performing analysis: " + error.message;
+    })
+    .finally(() => {
+      setButtonLoading(this, false);
+    });
+  });
+
+  // Enhanced form submission
+  document.getElementById("test-form").addEventListener("submit", function(e) {
+    const runTestBtn = document.getElementById("run-test-btn");
+    setButtonLoading(runTestBtn, true);
+    updateStatus('running');
+    document.body.classList.add('form-submitting');
+    
+    // Reset after a delay (you might want to handle this based on actual completion)
+    setTimeout(() => {
+      setButtonLoading(runTestBtn, false);
+      updateStatus('complete');
+      document.body.classList.remove('form-submitting');
+    }, 2000);
+  });
+
+  // Initialize status
+  updateStatus('waiting');
+</script>
 </body>
 </html>

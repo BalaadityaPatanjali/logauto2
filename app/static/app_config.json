@@ -1,0 +1,14 @@
+{
+  "FOBPM": {
+    "clusters": ["cluster1", "cluster2", "cluster3", "cluster4"],
+    "bundles": ["Bulkdeviceenrollment", "Bulkordervalidation"]
+  },
+  "BOBPM": {
+    "clusters": ["cluster1", "cluster2", "cluster3", "cluster4"],
+    "bundles": ["IOTSubscription", "Bulkordervalidation"]
+  },
+  "BRMS": {
+    "clusters": ["cluster1", "cluster2", "cluster3", "cluster4"],
+    "bundles": ["MobilityPromotionTreatmentRules", "MobilityDeviceTreatmentRules"]
+  }
+}
