@@ -5,10 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LogOps - DevOps Testing Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Enhanced Color Palette */
+      /* Dark Theme Color Palette */
       --bg-primary: #0a0e1a;
       --bg-secondary: #111827;
       --bg-tertiary: #1f2937;
@@ -21,35 +21,31 @@
       --text-muted: #9ca3af;
       --text-accent: #60a5fa;
       
-      --accent-primary: #10b981;
-      --accent-secondary: #3b82f6;
-      --accent-tertiary: #8b5cf6;
+      --accent-primary: #3b82f6;
+      --accent-secondary: #10b981;
+      --accent-success: #10b981;
       --accent-warning: #f59e0b;
       --accent-danger: #ef4444;
       --accent-info: #06b6d4;
       
       --border-default: #374151;
-      --border-muted: #1f2937;
+      --border-light: #374151;
+      --border-medium: #4b5563;
       --border-accent: #3b82f6;
       
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
       --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
       
       --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       --gradient-info: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-      --gradient-dark: linear-gradient(135deg, #1f2937 0%, #111827 100%);
       
       --backdrop-blur: blur(12px);
-      --border-radius-sm: 6px;
-      --border-radius-md: 8px;
-      --border-radius-lg: 12px;
-      --border-radius-xl: 16px;
+      --radius: 8px;
+      --radius-lg: 12px;
     }
 
     * {
@@ -62,25 +58,28 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg-primary);
       color: var(--text-primary);
+      line-height: 1.5;
       display: flex;
       height: 100vh;
       overflow: hidden;
-      line-height: 1.6;
       background-image: 
         radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
     }
 
-    /* Enhanced Sidebar */
+    /* Simplified Sidebar */
     .sidebar {
-      width: 380px;
+      width: 300px;
       background: var(--bg-overlay);
       backdrop-filter: var(--backdrop-blur);
       border-right: 1px solid var(--border-default);
       display: flex;
       flex-direction: column;
-      position: relative;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
       z-index: 10;
       box-shadow: var(--shadow-xl);
     }
@@ -95,11 +94,12 @@
       background: var(--gradient-primary);
     }
 
-    /* Modern Header */
+    /* Clean Header */
     .sidebar-header {
-      padding: 2rem 2rem 1.5rem;
-      border-bottom: 1px solid var(--border-muted);
-      background: var(--gradient-dark);
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border-default);
+      flex-shrink: 0;
+      background: var(--bg-tertiary);
       position: relative;
     }
 
@@ -107,8 +107,8 @@
       content: '';
       position: absolute;
       bottom: 0;
-      left: 2rem;
-      right: 2rem;
+      left: 20px;
+      right: 20px;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--accent-secondary), transparent);
     }
@@ -116,26 +116,25 @@
     .logo-container {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 0.5rem;
+      gap: 12px;
     }
 
     .logo-icon {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       background: var(--gradient-primary);
-      border-radius: var(--border-radius-md);
+      border-radius: var(--radius);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
+      font-size: 14px;
       font-weight: 700;
       color: white;
       box-shadow: var(--shadow-glow);
     }
 
     .sidebar-header h1 {
-      font-size: 1.75rem;
+      font-size: 20px;
       font-weight: 700;
       background: linear-gradient(135deg, #f9fafb 0%, #d1d5db 100%);
       -webkit-background-clip: text;
@@ -144,19 +143,19 @@
     }
 
     .subtitle {
-      font-size: 0.875rem;
+      font-size: 13px;
       color: var(--text-muted);
-      font-weight: 400;
-      margin-left: 3rem;
+      margin-top: 2px;
     }
 
-    /* Enhanced Sidebar Content */
+    /* Simplified Content Area */
     .sidebar-content {
       flex: 1;
-      padding: 2rem;
+      padding: 20px;
       overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border-default) transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
     .sidebar-content::-webkit-scrollbar {
@@ -172,281 +171,82 @@
       border-radius: 3px;
     }
 
-    /* Modern Collapsible Sections */
-    .collapsible-section {
-      margin-bottom: 2rem;
+    /* Configuration Section */
+    .config-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .collapsible-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+    .section-title {
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-primary);
-      cursor: pointer;
-      padding: 1rem 1.25rem;
-      border-radius: var(--border-radius-lg);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-muted);
-      user-select: none;
-      position: relative;
-      overflow: hidden;
+      margin-bottom: 8px;
     }
 
-    .collapsible-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
+    /* Clean Form Elements */
+    select, input[type="text"], input[type="email"] {
       width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-      transition: left 0.6s ease;
-    }
-
-    .collapsible-header:hover::before {
-      left: 100%;
-    }
-
-    .collapsible-header:hover {
-      background: var(--bg-elevated);
-      border-color: var(--border-accent);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .collapsible-header .icon {
-      font-size: 1rem;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      color: var(--accent-secondary);
-      font-weight: 700;
-    }
-
-    .collapsible-header.collapsed .icon {
-      transform: rotate(-90deg);
-    }
-
-    .section-label {
-      flex: 1;
-      font-size: 0.95rem;
-    }
-
-    .section-badge {
-      background: var(--accent-secondary);
-      color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--border-radius-sm);
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .collapsible-body {
-      margin-top: 1rem;
-      max-height: 0;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      opacity: 0;
-    }
-
-    .collapsible-body.open {
-      max-height: 400px;
-      opacity: 1;
-      padding-bottom: 0.5rem;
-    }
-
-    /* Enhanced Form Elements */
-    select, input[type="text"] {
-      width: 100%;
-      padding: 1rem 1.25rem;
+      padding: 12px 16px;
       border: 2px solid var(--border-default);
-      border-radius: var(--border-radius-lg);
+      border-radius: var(--radius-lg);
       background: var(--bg-surface);
       color: var(--text-primary);
-      font-size: 0.9rem;
-      font-weight: 500;
+      font-size: 14px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       appearance: none;
       background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-      background-position: right 1rem center;
+      background-position: right 16px center;
       background-repeat: no-repeat;
-      background-size: 1.25rem;
+      background-size: 16px;
       box-shadow: var(--shadow-sm);
     }
 
-    input[type="text"] {
+    input[type="text"], input[type="email"] {
       background-image: none;
     }
 
-    select:focus, input[type="text"]:focus {
+    select:focus, input[type="text"]:focus, input[type="email"]:focus {
       outline: none;
       border-color: var(--accent-secondary);
       box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), var(--shadow-md);
       background: var(--bg-tertiary);
-      transform: translateY(-1px);
     }
 
-    select:hover, input[type="text"]:hover {
-      border-color: var(--border-accent);
-      transform: translateY(-1px);
+    select:disabled, input[type="text"]:disabled, input[type="email"]:disabled {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      cursor: not-allowed;
     }
 
-    /* Enhanced Download Section */
-    .download-section {
-      margin-top: 2rem;
-      padding-top: 2rem;
-      border-top: 1px solid var(--border-muted);
-      position: relative;
-    }
-
-    .download-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent-info), transparent);
-    }
-
-    /* Modern Main Content */
-    .main-content {
-      flex: 1;
+    /* Action Buttons */
+    .action-buttons {
       display: flex;
       flex-direction: column;
-      background: var(--bg-primary);
-      overflow: hidden;
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    /* Enhanced Content Header */
-    .content-header {
-      padding: 2rem 2.5rem 1.5rem;
-      border-bottom: 1px solid var(--border-muted);
-      background: var(--bg-overlay);
-      backdrop-filter: var(--backdrop-blur);
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    .content-header::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 2.5rem;
-      right: 2.5rem;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent-secondary), transparent);
-    }
-
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 2rem;
-    }
-
-    .header-title {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .content-header h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0;
-    }
-
-    .live-indicator {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      background: var(--bg-tertiary);
-      border-radius: var(--border-radius-md);
-      border: 1px solid var(--border-default);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    /* Enhanced Toolbar */
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.25rem;
-      align-items: stretch;
-    }
-
-    .search-container {
-      flex: 1;
-      min-width: 300px;
-      position: relative;
-    }
-
-    .search-container::before {
-      content: '';
-      position: absolute;
-      left: 1.25rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3e%3c/svg%3e");
-      pointer-events: none;
-    }
-
-    #log-search {
-      padding-left: 3rem;
-      margin: 0;
-      background: var(--bg-surface);
-    }
-
-    /* Modern Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.75rem;
-      padding: 1rem 1.5rem;
-      border: 2px solid transparent;
-      border-radius: var(--border-radius-lg);
+      gap: 8px;
+      padding: 12px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
       cursor: pointer;
-      font-weight: 600;
-      font-size: 0.9rem;
+      font-weight: 500;
+      font-size: 14px;
       text-decoration: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
       position: relative;
-      overflow: hidden;
-      min-width: 140px;
-      white-space: nowrap;
-      box-shadow: var(--shadow-md);
       font-family: inherit;
     }
 
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.6s ease;
-    }
-
-    .btn:hover::before {
-      left: 100%;
-    }
-
     .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-xl);
+      transform: translateY(-1px);
     }
 
     .btn:active {
@@ -458,14 +258,9 @@
       color: white;
     }
 
-    .btn-success {
-      background: var(--gradient-success);
-      color: white;
-    }
-
-    .btn-warning {
-      background: var(--gradient-warning);
-      color: white;
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
     }
 
     .btn-secondary {
@@ -477,25 +272,189 @@
     .btn-secondary:hover {
       background: var(--bg-tertiary);
       border-color: var(--border-accent);
+      transform: translateY(-2px);
     }
 
-    /* Enhanced Output Container */
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn:disabled:hover {
+      transform: none;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-left: 300px;
+      background: var(--bg-primary);
+    }
+
+    /* Clean Header */
+    .content-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border-default);
+      background: var(--bg-overlay);
+      backdrop-filter: var(--backdrop-blur);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .content-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 32px;
+      right: 32px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-secondary), transparent);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .content-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-default);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-success);
+      animation: pulse 2s infinite;
+    }
+
+    /* Metrics */
+    .metrics {
+      display: flex;
+      gap: 32px;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .search-container {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+   .btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: white !important;
+}
+
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .btn-success {
+      background: var(--gradient-success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .btn-info {
+      background: var(--gradient-info);
+      color: white;
+    }
+
+    .btn-info:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .search-container::before {
+      content: '';
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3e%3c/svg%3e");
+      pointer-events: none;
+    }
+
+    #log-search {
+      padding-left: 44px;
+      margin: 0;
+      background: var(--bg-surface);
+    }
+
+    /* Output Container */
     .output-container {
       flex: 1;
-      padding: 2.5rem;
-      overflow: hidden;
+      padding: 24px 32px;
       display: grid;
       grid-template-rows: 1fr 1fr;
-      gap: 2rem;
+      gap: 24px;
       min-height: 0;
     }
 
-    /* Modern Output Cards */
+    /* Clean Output Cards */
     .output-card {
       background: var(--bg-overlay);
       backdrop-filter: var(--backdrop-blur);
       border: 1px solid var(--border-default);
-      border-radius: var(--border-radius-xl);
+      border-radius: var(--radius-lg);
       overflow: hidden;
       box-shadow: var(--shadow-xl);
       display: flex;
@@ -515,15 +474,16 @@
     }
 
     .output-header {
-      padding: 1.5rem 2rem;
+      padding: 16px 20px;
       background: var(--bg-tertiary);
       border-bottom: 1px solid var(--border-default);
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 12px;
       font-weight: 600;
       color: var(--text-primary);
       flex-shrink: 0;
+      font-size: 14px;
       position: relative;
     }
 
@@ -531,45 +491,41 @@
       content: '';
       position: absolute;
       bottom: 0;
-      left: 2rem;
-      right: 2rem;
+      left: 20px;
+      right: 20px;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--accent-info), transparent);
     }
 
     .header-icon {
-      width: 32px;
+      width: 24px;
       height: 24px;
       background: var(--gradient-info);
-      border-radius: var(--border-radius-sm);
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
+      font-size: 11px;
       font-weight: 700;
       color: white;
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Card Controls */
     .card-controls {
       margin-left: auto;
       display: flex;
-      gap: 0.5rem;
+      gap: 8px;
     }
 
     .control-btn {
-      padding: 0.5rem;
+      padding: 6px 8px;
       background: var(--bg-elevated);
       border: 1px solid var(--border-default);
-      border-radius: var(--border-radius-sm);
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s ease;
       color: var(--text-secondary);
-      font-weight: 600;
-      font-size: 0.875rem;
-      width: 32px;
-      height: 32px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -581,20 +537,15 @@
       border-color: var(--border-accent);
     }
 
-    /* Maximize functionality */
+    /* Maximized state */
     .output-card.maximized {
       position: fixed;
       top: 0;
-      left: 0;
+      left: 300px;
       right: 0;
       bottom: 0;
       z-index: 1000;
       border-radius: 0;
-      margin: 0;
-    }
-
-    .output-container.has-maximized {
-      overflow: hidden;
     }
 
     .output-container.has-maximized .output-card:not(.maximized) {
@@ -610,7 +561,6 @@
 
     .output-content::-webkit-scrollbar {
       width: 8px;
-      height: 8px;
     }
 
     .output-content::-webkit-scrollbar-track {
@@ -626,15 +576,15 @@
       background: var(--border-accent);
     }
 
-    /* Enhanced Code Display */
+    /* Code Display */
     pre {
       margin: 0;
-      padding: 2rem;
+      padding: 20px;
       background: transparent;
       color: var(--text-secondary);
-      font-family: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
-      font-size: 0.875rem;
-      line-height: 1.7;
+      font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.6;
       white-space: pre-wrap;
       word-break: break-word;
       height: 100%;
@@ -642,62 +592,24 @@
 
     #log {
       background: var(--bg-surface);
-      border: 1px solid var(--border-muted);
+      border: 1px solid var(--border-default);
     }
 
     #summary-output {
       background: var(--bg-surface);
-      border: 1px solid var(--border-muted);
       color: var(--text-primary);
     }
 
-    /* Enhanced Summary Card */
+    /* Hidden state */
     #summary-card.hidden {
       display: none !important;
     }
 
-    .summary-toggle {
-      margin-left: auto;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.875rem;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border-default);
-      border-radius: var(--border-radius-sm);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
-
-    .summary-toggle:hover {
-      background: var(--bg-surface);
-      color: var(--text-primary);
-      border-color: var(--border-accent);
-    }
-
-    /* Enhanced Status Indicators */
-    .status-waiting {
-      background: var(--accent-warning);
-    }
-
-    .status-running {
-      background: var(--accent-info);
-    }
-
-    .status-complete {
-      background: var(--accent-primary);
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    /* Enhanced Loading Spinner */
+    /* Loading Spinner */
     .loading-spinner {
       display: inline-block;
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       border: 2px solid var(--border-default);
       border-top: 2px solid var(--accent-secondary);
       border-radius: 50%;
@@ -709,178 +621,141 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Enhanced Search Highlighting */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Search Highlighting */
     mark {
       background: var(--accent-warning);
       color: var(--bg-primary);
-      padding: 0.125rem 0.375rem;
-      border-radius: var(--border-radius-sm);
+      padding: 2px 4px;
+      border-radius: 3px;
       font-weight: 600;
       box-shadow: var(--shadow-sm);
     }
 
+    /* Form States */
+    .error-state {
+      border-color: var(--accent-danger) !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .success-state {
+      border-color: var(--accent-success) !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    }
+    /* Toast Notification */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--gradient-success);
+  color: white;
+  padding: 16px 24px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 9999;
+  transform: translateX(400px);
+  transition: transform 0.3s ease-out;
+  font-weight: 600;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast.error {
+  background: var(--gradient-danger);
+}
+
+.toast-icon {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
     /* Responsive Design */
     @media (max-width: 1024px) {
       .sidebar {
-        width: 350px;
+        width: 280px;
       }
       
-      .output-container {
-        padding: 2rem;
-        gap: 1.5rem;
+      .main-content {
+        margin-left: 280px;
+      }
+      
+      .output-card.maximized {
+        left: 280px;
       }
     }
 
     @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
-      
       .sidebar {
         width: 100%;
+        position: relative;
+        height: auto;
         max-height: 50vh;
         border-right: none;
-        border-bottom: 1px solid var(--border-default);
-      }
-      
-      .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .search-container {
-        min-width: unset;
+        border-bottom: 1px solid var(--border-light);
       }
 
+      .main-content {
+        margin-left: 0;
+      }
+      
       .output-container {
-        grid-template-rows: 1fr 1fr;
-        padding: 1.5rem;
+        padding: 16px;
+        gap: 16px;
+      }
+
+      .content-header {
+        padding: 16px 20px;
       }
 
       .header-top {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
+        gap: 16px;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .toolbar-right {
+        margin-left: 0;
+        justify-content: stretch;
+      }
+
+      .toolbar-right .btn {
+        flex: 1;
+      }
+
+      .search-container {
+        max-width: none;
+      }
+
+      .output-card.maximized {
+        left: 0;
       }
     }
 
-    /* Animation Classes */
+    /* Animations */
     .fade-in {
-      animation: fadeIn 0.5s ease-out;
+      animation: fadeIn 0.3s ease-out;
     }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
-    .slide-up {
-      animation: slideUp 0.3s ease-out;
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    /* Enhanced Form States */
-    .form-submitting .btn-primary {
-      pointer-events: none;
-      opacity: 0.7;
-    }
-
-    /* Error States */
-    .error-state {
-      border-color: var(--accent-danger) !important;
-      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
-    }
-
-    /* Success States */
-    .success-state {
-      border-color: var(--accent-primary) !important;
-      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-    }
-
-    /* Testing Portal Specific Styles */
-    .test-status-bar {
-      background: var(--bg-tertiary);
-      padding: 0.75rem 2rem;
-      border-bottom: 1px solid var(--border-muted);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      font-size: 0.875rem;
-    }
-
-    .test-metrics {
-      display: flex;
-      gap: 2rem;
-      margin-left: auto;
-    }
-
-    .metric {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .metric-value {
-      font-weight: 600;
-      color: var(--accent-secondary);
-    }
-
-    /* Additional animations */
-    @keyframes slideDown {
-      from { max-height: 0; opacity: 0; }
-      to { max-height: 400px; opacity: 1; }
-    }
-
-    @keyframes fadeOut {
-      from { opacity: 1; transform: translateY(0); }
-      to { opacity: 0; transform: translateY(-10px); }
-    }
-
-    /* Enhanced focus states */
-    select:focus, input:focus {
-      animation: focusPulse 0.3s ease-out;
-    }
-
-    @keyframes focusPulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.02); }
-      100% { transform: scale(1); }
-    }
-
-    /* Loading states */
-    .btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    /* Enhanced scrollbar for webkit browsers */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--bg-surface);
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--border-default);
-      border-radius: 4px;
-      transition: all 0.2s ease;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--border-accent);
-    }
   </style>
 </head>
 <body>
-  <div class="sidebar fade-in">
+  <div class="sidebar">
     <div class="sidebar-header">
       <div class="logo-container">
         <div class="logo-icon">LO</div>
@@ -895,68 +770,41 @@
       <form method="POST" id="test-form">
         {% csrf_token %}
 
-        <div class="collapsible-section slide-up">
-          <div class="collapsible-header" onclick="toggleSection('app-options')">
-            <span class="icon">▼</span>
-            <span class="section-label">Application</span>
-            <span class="section-badge">1</span>
-          </div>
-          <div class="collapsible-body open" id="app-options">
-            <select name="application" id="app-select" required>
-              <option value="">Select Application</option>
-            </select>
-          </div>
-        </div>
+        <div class="config-section">
+          <div class="section-title">Application</div>
+          <select name="application" id="app-select" required>
+            <option value="">Select Application</option>
+          </select>
 
-        <div class="collapsible-section slide-up">
-          <div class="collapsible-header" onclick="toggleSection('cluster-options')">
-            <span class="icon">▼</span>
-            <span class="section-label">Azure Cluster</span>
-            <span class="section-badge">2</span>
-          </div>
-          <div class="collapsible-body open" id="cluster-options">
-            <select name="cluster" id="cluster-select" required>
-              <option value="">Select Cluster</option>
-              {% for i in "1234" %}
-                <option value="cluster{{ i }}">Cluster Prod AKS {{ i }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
+          <div class="section-title">Azure Cluster</div>
+          <select name="cluster" id="cluster-select" required>
+            <option value="">Select Cluster</option>
+            {% for i in "1234" %}
+              <option value="cluster{{ i }}">Cluster Prod AKS {{ i }}</option>
+            {% endfor %}
+          </select>
 
-        <div class="collapsible-section slide-up">
-          <div class="collapsible-header" onclick="toggleSection('bundle-options')">
-            <span class="icon">▼</span>
-            <span class="section-label">Bundle Name</span>
-            <span class="section-badge">3</span>
-          </div>
-          <div class="collapsible-body open" id="bundle-options">
-            <select name="testtype" id="bundle-select" required>
-              <option value="">Select Bundle</option>
-            </select>
-          </div>
-        </div>
+          <div class="section-title">Bundle Name</div>
+          <select name="testtype" id="bundle-select" required>
+            <option value="">Select Bundle</option>
+          </select>
 
-        <div class="collapsible-section slide-up">
-          <div class="collapsible-header" onclick="toggleSection('pod-options')">
-            <span class="icon">▼</span>
-            <span class="section-label">Pods</span>
-            <span class="section-badge">4</span>
-          </div>
-          <div class="collapsible-body open" id="pod-options">
-            <select name="pod" id="pod-select" required>
-              <option value="">Select Pod</option>
-            </select>
-          </div>
-        </div>
+          <div class="section-title">Pods</div>
+          <select name="pod" id="pod-select" required>
+            <option value="">Select Pod</option>
+          </select>
 
-        {% if log_file_name %}
-          <div class="download-section">
-            <a href="{% static 'logs/' %}{{ log_file_name }}" download class="btn btn-secondary">
+          <div class="section-title">Email for Reports</div>
+          <input type="email" id="email-input" placeholder="your.email@company.com" />
+
+          <div class="action-buttons">
+            {% if log_file_name %}
+            <button type="button" class="btn btn-secondary" onclick="downloadCurrentLog()">
               Download Log
-            </a>
+            </button>
+            {% endif %}
           </div>
-        {% endif %}
+        </div>
       </form>
     </div>
   </div>
@@ -964,21 +812,21 @@
   <div class="main-content">
     <div class="content-header">
       <div class="header-top">
-        <div class="header-title">
+        <div>
           <h2>Test Execution Dashboard</h2>
-          <div class="live-indicator">
-            <div class="status-dot status-waiting"></div>
-            <span id="status-text" class="status-text">Ready</span>
+          <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span id="status-text">LogOps Ready</span>
           </div>
         </div>
-        <div class="test-metrics">
+        <div class="metrics">
           <div class="metric">
-            <span>Uptime:</span>
-            <span class="metric-value" id="uptime">--:--:--</span>
+            <div class="metric-label">Uptime</div>
+            <div class="metric-value" id="uptime">00:00:02</div>
           </div>
           <div class="metric">
-            <span>Tests:</span>
-            <span class="metric-value" id="test-count">0</span>
+            <div class="metric-label">Tests</div>
+            <div class="metric-value" id="test-count">0</div>
           </div>
         </div>
       </div>
@@ -987,20 +835,21 @@
         <div class="search-container">
           <input type="text" id="log-search" placeholder="Search logs, errors, warnings..." />
         </div>
-        <button onclick="searchLog()" class="btn btn-secondary">Search</button>
-        <button type="button" id="summarize-btn" class="btn btn-success">
-          Summarize
-        </button>
-        <button type="button" id="analyze-btn" class="btn btn-warning">
-          RCA
-        </button>
+        <button onclick="searchLog()" class="btn btn-info">Search</button>
+        <div class="toolbar-right">
+          <button type="button" id="summarize-btn" class="btn btn-success">
+            Summarize
+          </button>
+          <button type="button" id="analyze-btn" class="btn btn-warning">
+            RCA
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="output-container" id="output-container">
       <div class="output-card" id="log-card">
         <div class="output-header">
-          <div class="header-icon">LOG</div>
           <span>Log Output</span>
           <div class="card-controls">
             <button class="control-btn" onclick="toggleMaximize('log-card')" title="Maximize/Restore">
@@ -1015,14 +864,10 @@
 
       <div class="output-card" id="summary-card">
         <div class="output-header">
-          <div class="header-icon">AI</div>
           <span>AI Analysis</span>
           <div class="card-controls">
             <button class="control-btn" onclick="toggleMaximize('summary-card')" title="Maximize/Restore">
               <span id="summary-maximize-icon">⛶</span>
-            </button>
-            <button class="control-btn" onclick="toggleSummaryCard()" title="Hide/Show">
-              <span id="summary-toggle-icon">−</span>
             </button>
           </div>
         </div>
@@ -1034,43 +879,21 @@
   </div>
 
 <script>
-  // Enhanced toggle functionality with modern animations
-  function toggleSection(id) {
-    const section = document.getElementById(id);
-    const header = section.previousElementSibling;
-    const icon = header.querySelector('.icon');
-    
-    section.classList.toggle('open');
-    header.classList.toggle('collapsed');
-    
-    if (section.classList.contains('open')) {
-      icon.textContent = '▼';
-      section.style.animation = 'slideDown 0.3s ease-out';
-    } else {
-      icon.textContent = '▶';
-      section.style.animation = 'slideUp 0.3s ease-out';
-    }
-  }
-
   // Enhanced summary card toggle
   function toggleSummaryCard() {
     const summaryCard = document.getElementById('summary-card');
-    const toggleIcon = document.getElementById('summary-toggle-icon');
     const outputContainer = document.querySelector('.output-container');
     
     if (summaryCard.classList.contains('hidden')) {
       summaryCard.classList.remove('hidden');
-      toggleIcon.textContent = '−';
       outputContainer.style.gridTemplateRows = '1fr 1fr';
-      summaryCard.style.animation = 'slideUp 0.3s ease-out';
     } else {
       summaryCard.classList.add('hidden');
-      toggleIcon.textContent = '+';
       outputContainer.style.gridTemplateRows = '1fr';
     }
   }
 
-  // NEW: Maximize/Minimize functionality
+  // Maximize/Minimize functionality
   function toggleMaximize(cardId) {
     const card = document.getElementById(cardId);
     const container = document.getElementById('output-container');
@@ -1102,7 +925,7 @@
     }
   }
 
-  // Enhanced search with modern UX
+  // Search functionality
   function searchLog() {
     const keyword = document.getElementById('log-search').value.toLowerCase().trim();
     const logPre = document.querySelector("#log code");
@@ -1114,7 +937,7 @@
     
     if (!keyword) {
       logPre.innerHTML = originalText;
-      updateStatusText('Ready');
+      updateStatusText('LogOps Ready');
       return;
     }
     
@@ -1129,52 +952,36 @@
     const matches = (highlighted.match(/<mark>/g) || []).length;
     updateStatusText(`Found ${matches} matches for "${keyword}"`);
     
-    // Scroll to first match with smooth animation
+    // Scroll to first match
     const firstMatch = logPre.querySelector('mark');
     if (firstMatch) {
       firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstMatch.style.animation = 'pulse 1s ease-out';
     }
   }
 
-  // Enhanced search interactions
+  // Search on Enter key
   document.getElementById('log-search').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
       searchLog();
     }
   });
 
+  // Clear search when input is empty
   document.getElementById('log-search').addEventListener('input', function(e) {
     if (!e.target.value.trim()) {
       searchLog();
     }
   });
 
-  // Enhanced status management
+  // Status management
   function updateStatusText(text) {
     const statusElement = document.getElementById('status-text');
     if (statusElement) {
       statusElement.textContent = text;
-      statusElement.style.animation = 'fadeIn 0.3s ease-out';
     }
   }
 
-  function updateStatus(status) {
-    const indicator = document.querySelector('.status-dot');
-    const statusText = document.getElementById('status-text');
-    
-    indicator.className = `status-dot status-${status}`;
-    
-    const statusMessages = {
-      waiting: 'Ready',
-      running: 'Processing...',
-      complete: 'Complete'
-    };
-    
-    updateStatusText(statusMessages[status] || status);
-  }
-
-  // Application configuration and dynamic loading
+  // Application configuration
   const clusterSelect = document.getElementById("cluster-select");
   const bundleSelect = document.getElementById("bundle-select");
   const podSelect = document.getElementById("pod-select");
@@ -1182,22 +989,17 @@
   let appConfig = {};
   let testCount = 0;
 
-  // Enhanced app configuration loading
+  // Load app configuration
   fetch("/get-app-config/")
     .then(res => res.json())
     .then(data => {
       appConfig = data;
       appSelect.innerHTML = "<option value=''>Select Application</option>";
-      Object.keys(appConfig).forEach((appName, index) => {
+      Object.keys(appConfig).forEach(appName => {
         const opt = document.createElement("option");
         opt.value = appName;
         opt.textContent = appName;
         appSelect.appendChild(opt);
-        
-        // Add animation delay for each option
-        setTimeout(() => {
-          opt.style.animation = 'fadeIn 0.3s ease-out';
-        }, index * 50);
       });
       bindAppEvents();
       updateStatusText('Applications loaded');
@@ -1228,9 +1030,13 @@
     });
     
     podSelect.addEventListener("change", function() {
-      fetchPodLogs();
       this.classList.add('success-state');
       setTimeout(() => this.classList.remove('success-state'), 2000);
+      
+      // Auto-load logs when pod is selected
+      if (this.value) {
+        fetchPodLogs();
+      }
     });
   }
 
@@ -1239,19 +1045,13 @@
     const selectedCluster = clusterSelect.value;
     bundleSelect.innerHTML = "<option value=''>Select Bundle</option>";
     podSelect.innerHTML = "<option value=''>Select Pod</option>";
-    hideDownloadButton();
     
     if (selectedApp && selectedCluster && appConfig[selectedApp]) {
-      appConfig[selectedApp].bundles.forEach((bundle, index) => {
+      appConfig[selectedApp].bundles.forEach(bundle => {
         const opt = document.createElement("option");
         opt.value = bundle.toLowerCase().replace(/\s+/g, '-');
         opt.textContent = bundle;
         bundleSelect.appendChild(opt);
-        
-        // Add staggered animation
-        setTimeout(() => {
-          opt.style.animation = 'slideUp 0.2s ease-out';
-        }, index * 30);
       });
       updateStatusText(`${appConfig[selectedApp].bundles.length} bundles available`);
     }
@@ -1263,10 +1063,8 @@
     const selectedBundle = bundleSelect.value;
     
     podSelect.innerHTML = "<option value=''>Select Pod</option>";
-    hideDownloadButton();
     
     if (selectedApp && selectedCluster && selectedBundle) {
-      updateStatus('running');
       updateStatusText('Loading pods...');
       
       const loadingOption = document.createElement("option");
@@ -1291,19 +1089,13 @@
       .then(data => {
         podSelect.innerHTML = "<option value=''>Select Pod</option>";
         if (data.pods && data.pods.length > 0) {
-          data.pods.forEach((pod, index) => {
+          data.pods.forEach(pod => {
             const opt = document.createElement("option");
             opt.value = pod.name || pod;
             opt.textContent = pod.display_name || pod.name || pod;
             podSelect.appendChild(opt);
-            
-            // Add staggered animation
-            setTimeout(() => {
-              opt.style.animation = 'slideUp 0.2s ease-out';
-            }, index * 40);
           });
           updateStatusText(`${data.pods.length} pods available`);
-          updateStatus('complete');
         } else {
           const noPodOption = document.createElement("option");
           noPodOption.value = "";
@@ -1311,14 +1103,12 @@
           noPodOption.disabled = true;
           podSelect.appendChild(noPodOption);
           updateStatusText('No pods found');
-          updateStatus('waiting');
         }
       })
       .catch(error => {
         console.error('Error loading pods:', error);
         podSelect.innerHTML = "<option value=''>Error loading pods</option>";
         updateStatusText('Error loading pods');
-        updateStatus('waiting');
         podSelect.classList.add('error-state');
       });
     }
@@ -1331,10 +1121,9 @@
     const selectedPod = podSelect.value;
     
     if (selectedApp && selectedCluster && selectedBundle && selectedPod) {
-      updateStatus('running');
       updateStatusText('Fetching pod logs...');
       
-      // Enhanced loading message
+      // Show loading message
       document.querySelector("#log code").innerHTML = `
 Loading logs from pod: ${selectedPod}
 Cluster: ${selectedCluster}
@@ -1359,87 +1148,66 @@ Please wait while we retrieve the latest logs...`;
       .then(data => {
         if (data.logs) {
           document.querySelector("#log code").innerText = data.logs;
-          updateStatus('complete');
           updateStatusText(`Logs loaded for ${selectedPod.length > 20 ? selectedPod.substring(0, 17) + '...' : selectedPod}`);
           testCount++;
           document.getElementById('test-count').textContent = testCount;
-          
-          // Enhanced download functionality
-          updateDownloadButton(selectedApp, selectedBundle, selectedPod, data.logs);
-          
-          // Add success animation
-          const logCard = document.querySelector('.output-card');
-          logCard.style.animation = 'slideUp 0.4s ease-out';
         } else {
           document.querySelector("#log code").innerText = data.error || "No logs available for this pod.";
-          updateStatus('waiting');
           updateStatusText('No logs available');
-          hideDownloadButton();
         }
       })
       .catch(error => {
         console.error('Error fetching pod logs:', error);
         document.querySelector("#log code").innerText = `Error fetching pod logs: ${error.message}`;
-        updateStatus('waiting');
         updateStatusText('Error fetching logs');
-        hideDownloadButton();
       });
+    } else {
+      updateStatusText('Please select all required fields');
+      // Highlight missing fields
+      if (!selectedApp) appSelect.classList.add('error-state');
+      if (!selectedCluster) clusterSelect.classList.add('error-state');
+      if (!selectedBundle) bundleSelect.classList.add('error-state');
+      if (!selectedPod) podSelect.classList.add('error-state');
+      
+      setTimeout(() => {
+        document.querySelectorAll('.error-state').forEach(el => {
+          el.classList.remove('error-state');
+        });
+      }, 3000);
     }
   }
 
-  // Enhanced download functionality
-  function updateDownloadButton(app, bundle, pod, logContent) {
-    const existingDownload = document.querySelector('.download-section');
-    if (existingDownload) {
-      existingDownload.remove();
+  function downloadCurrentLog() {
+    const logContent = document.querySelector("#log code").innerText;
+    const selectedApp = appSelect.value || 'app';
+    const selectedBundle = bundleSelect.value || 'bundle';
+    const selectedPod = podSelect.value || 'pod';
+    
+    if (logContent && !logContent.includes('Welcome to LogOps')) {
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+      const filename = `${selectedApp}-${selectedBundle}-${selectedPod}-${timestamp}.log`;
+      
+      const blob = new Blob([logContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      window.URL.revokeObjectURL(url);
+      
+      updateStatusText(`Downloaded: ${filename}`);
+    } else {
+      updateStatusText('No log data to download');
     }
-
-    const downloadSection = document.createElement('div');
-    downloadSection.className = 'download-section';
-    downloadSection.style.animation = 'slideUp 0.3s ease-out';
-    
-    const downloadBtn = document.createElement('button');
-    downloadBtn.className = 'btn btn-secondary';
-    downloadBtn.innerHTML = 'Download Log';
-    downloadBtn.onclick = () => downloadCurrentLog(app, bundle, pod, logContent);
-    
-    downloadSection.appendChild(downloadBtn);
-    
-    const sidebarContent = document.querySelector('.sidebar-content');
-    sidebarContent.appendChild(downloadSection);
   }
 
-  function hideDownloadButton() {
-    const existingDownload = document.querySelector('.download-section');
-    if (existingDownload) {
-      existingDownload.style.animation = 'fadeOut 0.3s ease-out';
-      setTimeout(() => existingDownload.remove(), 300);
-    }
-  }
-
-  function downloadCurrentLog(app, bundle, pod, logContent) {
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
-    const filename = `${app}-${bundle}-${pod}-${timestamp}.log`;
-    
-    const blob = new Blob([logContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    window.URL.revokeObjectURL(url);
-    
-    updateStatusText(`Downloaded: ${filename}`);
-    console.log(`Downloaded log file: ${filename}`);
-  }
-
-  // Enhanced CSRF token helper
+  // CSRF token helper
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -1455,7 +1223,7 @@ Please wait while we retrieve the latest logs...`;
     return cookieValue;
   }
 
-  // Enhanced button loading states
+  // Button loading states
   function setButtonLoading(button, isLoading) {
     const originalText = button.getAttribute('data-original-text') || button.innerHTML;
     if (!button.getAttribute('data-original-text')) {
@@ -1465,19 +1233,17 @@ Please wait while we retrieve the latest logs...`;
     if (isLoading) {
       button.innerHTML = '<span class="loading-spinner"></span> Processing...';
       button.disabled = true;
-      button.style.transform = 'scale(0.98)';
     } else {
       button.innerHTML = originalText;
       button.disabled = false;
-      button.style.transform = 'scale(1)';
     }
   }
 
-  // Enhanced AI functionality
+  // AI functionality
   document.getElementById("summarize-btn").addEventListener("click", function () {
     const log = document.querySelector("#log code").innerText;
     if (log === "Welcome to LogOps Testing Portal. Select an application, cluster, bundle, and pod to view logs." || 
-        log.includes("Fetching logs")) {
+        log.includes("Loading logs")) {
       updateStatusText("No log data to summarize");
       this.classList.add('error-state');
       setTimeout(() => this.classList.remove('error-state'), 2000);
@@ -1485,7 +1251,6 @@ Please wait while we retrieve the latest logs...`;
     }
     
     setButtonLoading(this, true);
-    updateStatus('running');
     
     const summaryCard = document.getElementById('summary-card');
     if (summaryCard.classList.contains('hidden')) {
@@ -1510,12 +1275,7 @@ This may take a few moments...`;
     .then(res => res.json())
     .then(data => {
       document.getElementById("summary-output").innerText = data.summary || "No summary generated.";
-      updateStatus('complete');
       updateStatusText('Summary generated');
-      
-      // Add success animation
-      const summaryOutput = document.getElementById("summary-output");
-      summaryOutput.style.animation = 'slideUp 0.4s ease-out';
     })
     .catch(error => {
       document.getElementById("summary-output").innerText = `Error generating summary: ${error.message}`;
@@ -1528,8 +1288,17 @@ This may take a few moments...`;
 
   document.getElementById("analyze-btn").addEventListener("click", function () {
     const log = document.querySelector("#log code").innerText;
+    const email = document.getElementById("email-input").value;
+    
+    if (!email) {
+      updateStatusText("Please enter your email address");
+      document.getElementById("email-input").classList.add('error-state');
+      setTimeout(() => document.getElementById("email-input").classList.remove('error-state'), 3000);
+      return;
+    }
+    
     if (log === "Welcome to LogOps Testing Portal. Select an application, cluster, bundle, and pod to view logs." || 
-        log.includes("Fetching logs")) {
+        log.includes("Loading logs")) {
       updateStatusText("No log data to analyze");
       this.classList.add('error-state');
       setTimeout(() => this.classList.remove('error-state'), 2000);
@@ -1537,7 +1306,6 @@ This may take a few moments...`;
     }
     
     setButtonLoading(this, true);
-    updateStatus('running');
     
     const summaryCard = document.getElementById('summary-card');
     if (summaryCard.classList.contains('hidden')) {
@@ -1546,12 +1314,10 @@ This may take a few moments...`;
     
     document.getElementById("summary-output").innerHTML = `
 Performing Root Cause Analysis...
-Identifying errors and failures
-Analyzing patterns and anomalies
-Generating actionable recommendations
-
-Deep analysis in progress...`;
+Generating report and sending to ${email}
+Please wait...`;
     
+    // First get the analysis
     fetch("/analyze/", {
       method: "POST",
       headers: {
@@ -1562,13 +1328,33 @@ Deep analysis in progress...`;
     })
     .then(res => res.json())
     .then(data => {
-      document.getElementById("summary-output").innerText = data.analysis || "No analysis generated.";
-      updateStatus('complete');
-      updateStatusText('RCA completed');
+      const analysis = data.analysis || "No analysis generated.";
+      document.getElementById("summary-output").innerText = analysis;
       
-      // Add success animation
-      const summaryOutput = document.getElementById("summary-output");
-      summaryOutput.style.animation = 'slideUp 0.4s ease-out';
+      // Then send via email
+      const selectedPod = document.getElementById("pod-select").value || "Unknown Pod";
+      
+      return fetch("/send-rca-email/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: new URLSearchParams({ 
+          email: email,
+          analysis: analysis,
+          pod_name: selectedPod
+        })
+      });
+    })
+    .then(res => res.json())
+    .then(emailData => {
+      if (emailData.success) {
+        updateStatusText('RCA completed and sent to email');
+      } else {
+        updateStatusText('RCA completed but email failed to send');
+        console.error('Email error:', emailData.error);
+      }
     })
     .catch(error => {
       document.getElementById("summary-output").innerText = `Error performing analysis: ${error.message}`;
@@ -1580,10 +1366,9 @@ Deep analysis in progress...`;
   });
 
   // Initialize the application
-  updateStatus('waiting');
   updateStatusText('Initializing...');
 
-  // Enhanced uptime counter
+  // Uptime counter
   let startTime = Date.now();
   setInterval(() => {
     const elapsed = Date.now() - startTime;
@@ -1594,12 +1379,12 @@ Deep analysis in progress...`;
       `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, 1000);
 
-  // Add some extra animations
+  // Ready state
   setTimeout(() => {
     updateStatusText('LogOps Ready');
   }, 1000);
 
-  // Add keyboard shortcuts
+  // Keyboard shortcuts
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey || e.metaKey) {
       switch(e.key) {
@@ -1618,6 +1403,57 @@ Deep analysis in progress...`;
       }
     }
   });
+
+  // Form validation
+  function validateConfiguration() {
+    const required = [appSelect, clusterSelect, bundleSelect, podSelect];
+    let isValid = true;
+    
+    required.forEach(select => {
+      if (!select.value) {
+        select.classList.add('error-state');
+        isValid = false;
+      } else {
+        select.classList.remove('error-state');
+      }
+    });
+    
+    return isValid;
+  }
+  function showToast(message, type = 'success') {
+  // Remove existing toast if any
+  const existingToast = document.querySelector('.toast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+  
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icon = type === 'success' ? '✅' : '❌';
+  toast.innerHTML = `<span class="toast-icon">${icon}</span>${message}`;
+  
+  // Add to page
+  document.body.appendChild(toast);
+  
+  // Show toast
+  setTimeout(() => toast.classList.add('show'), 100);
+  
+  // Hide toast after 4 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+  // Error handling
+  window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    updateStatusText('Application error occurred');
+  });
+
+  console.log('LogOps Testing Portal initialized successfully');
 </script>
 </body>
 </html>

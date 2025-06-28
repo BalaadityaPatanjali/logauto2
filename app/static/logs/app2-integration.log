@@ -1,6 +1,0 @@
-[2025-06-05 10:00:00] INFO Starting app1 on cluster2...
-[2025-06-05 10:01:00] ERROR Unable to connect to database.
-[2025-06-05 10:02:00] INFO Retrying connection...
-[2025-06-05 10:03:00] WARNING Connection is slow.
-[2025-06-05 10:04:00] INFO Connected successfully.
-[2025-06-05 10:05:00] SUCCESS All tests passed successfully.
