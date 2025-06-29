@@ -1,0 +1,25 @@
+[2025-06-29 16:02:15] INFO: Starting pod FOBPM-bulkdeviceenrollment-web-001
+[2025-06-29 16:02:16] INFO: Application: FOBPM
+[2025-06-29 16:02:17] INFO: Cluster: cluster1
+[2025-06-29 16:02:18] INFO: Bundle: bulkdeviceenrollment
+[2025-06-29 16:02:19] INFO: Namespace: bulkdeviceenrollment
+[2025-06-29 16:02:20] INFO: Container image: FOBPM:latest
+[2025-06-29 16:02:21] INFO: Initializing container environment...
+[2025-06-29 16:02:23] INFO: Starting HTTP server on port 8080
+[2025-06-29 16:02:25] INFO: Loading static assets and configurations
+[2025-06-29 16:02:27] INFO: Registering routes and middleware
+[2025-06-29 16:02:30] INFO: Web server ready - accepting connections
+[2025-06-29 16:02:35] INFO: Service running normally
+[2025-06-29 16:03:35] INFO: Processed 250 requests in last minute
+[2025-06-29 16:04:35] INFO: Health check passed - all systems green
+[2025-06-29 16:05:35] INFO: Database queries avg response: 45ms
+[2025-06-29 16:06:35] INFO: Cache hit ratio: 94.2%
+[2025-06-29 16:07:35] INFO: Background job completed successfully
+[2025-06-29 16:08:35] INFO: Memory usage: 45% - optimal range
+[2025-06-29 16:09:35] INFO: Request throughput: 4.2 req/sec
+[2025-06-29 17:30:15] INFO: === Recent Activity Summary ===
+[2025-06-29 17:30:16] INFO: Uptime: 1h 28m 15s
+[2025-06-29 17:30:17] INFO: Total requests processed: 15,240
+[2025-06-29 17:30:18] INFO: Current memory usage: 45%
+[2025-06-29 17:30:19] INFO: Current CPU usage: 25%
+[2025-06-29 17:30:20] INFO: Network I/O: 2.1 MB/s in, 3.4 MB/s out

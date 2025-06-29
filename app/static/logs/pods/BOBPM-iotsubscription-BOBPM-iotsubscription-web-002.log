@@ -1,0 +1,25 @@
+[2025-06-29 15:55:41] INFO: Starting pod BOBPM-iotsubscription-web-002
+[2025-06-29 15:55:42] INFO: Application: BOBPM
+[2025-06-29 15:55:43] INFO: Cluster: cluster3
+[2025-06-29 15:55:44] INFO: Bundle: iotsubscription
+[2025-06-29 15:55:45] INFO: Namespace: iotsubscription
+[2025-06-29 15:55:46] INFO: Container image: BOBPM:latest
+[2025-06-29 15:55:47] INFO: Initializing container environment...
+[2025-06-29 15:55:49] INFO: Starting HTTP server on port 8080
+[2025-06-29 15:55:51] INFO: Loading static assets and configurations
+[2025-06-29 15:55:53] INFO: Registering routes and middleware
+[2025-06-29 15:55:56] INFO: Web server ready - accepting connections
+[2025-06-29 15:56:01] INFO: Service running normally
+[2025-06-29 15:57:01] INFO: Processed 250 requests in last minute
+[2025-06-29 15:58:01] INFO: Health check passed - all systems green
+[2025-06-29 15:59:01] INFO: Database queries avg response: 45ms
+[2025-06-29 16:00:01] INFO: Cache hit ratio: 94.2%
+[2025-06-29 16:01:01] INFO: Background job completed successfully
+[2025-06-29 16:02:01] INFO: Memory usage: 45% - optimal range
+[2025-06-29 16:03:01] INFO: Request throughput: 4.2 req/sec
+[2025-06-29 17:23:41] INFO: === Recent Activity Summary ===
+[2025-06-29 17:23:42] INFO: Uptime: 1h 28m 15s
+[2025-06-29 17:23:43] INFO: Total requests processed: 15,240
+[2025-06-29 17:23:44] INFO: Current memory usage: 45%
+[2025-06-29 17:23:45] INFO: Current CPU usage: 25%
+[2025-06-29 17:23:46] INFO: Network I/O: 2.1 MB/s in, 3.4 MB/s out

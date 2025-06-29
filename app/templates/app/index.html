@@ -254,13 +254,22 @@
     }
 
     .btn-primary {
-      background: var(--gradient-primary);
-      color: white;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+      color: white !important;
+      border: 1px solid transparent !important;
     }
 
     .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
       transform: translateY(-2px);
       box-shadow: var(--shadow-xl);
+    }
+
+    .btn-primary:disabled {
+      background: var(--bg-elevated) !important;
+      color: var(--text-muted) !important;
+      cursor: not-allowed !important;
+      transform: none !important;
     }
 
     .btn-secondary {
@@ -391,10 +400,10 @@
       margin-left: auto;
     }
 
-   .btn-warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-  color: white !important;
-}
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+      color: white !important;
+    }
 
     .btn-warning:hover {
       transform: translateY(-2px);
@@ -646,35 +655,37 @@
       border-color: var(--accent-success) !important;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
     }
+
     /* Toast Notification */
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: var(--gradient-success);
-  color: white;
-  padding: 16px 24px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xl);
-  z-index: 9999;
-  transform: translateX(400px);
-  transition: transform 0.3s ease-out;
-  font-weight: 600;
-}
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--gradient-success);
+      color: white;
+      padding: 16px 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      z-index: 9999;
+      transform: translateX(400px);
+      transition: transform 0.3s ease-out;
+      font-weight: 600;
+      max-width: 400px;
+    }
 
-.toast.show {
-  transform: translateX(0);
-}
+    .toast.show {
+      transform: translateX(0);
+    }
 
-.toast.error {
-  background: var(--gradient-danger);
-}
+    .toast.error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
 
-.toast-icon {
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 16px;
-}
+    .toast-icon {
+      display: inline-block;
+      margin-right: 8px;
+      font-size: 16px;
+    }
 
     /* Responsive Design */
     @media (max-width: 1024px) {
@@ -837,6 +848,9 @@
         </div>
         <button onclick="searchLog()" class="btn btn-info">Search</button>
         <div class="toolbar-right">
+          <button type="button" id="download-btn" class="btn btn-primary">
+            Download
+          </button>
           <button type="button" id="summarize-btn" class="btn btn-success">
             Summarize
           </button>
@@ -941,11 +955,12 @@
       return;
     }
     
-    const highlighted = originalText.replace(
-      new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-      `<mark>$1</mark>`
-    );
-    
+ // FIXED - clean separation and proper escaping
+const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const highlighted = originalText.replace(
+  new RegExp(`(${escapedKeyword})`, 'gi'),
+  `<mark>$1</mark>`
+);
     logPre.innerHTML = highlighted;
     
     // Count matches
@@ -1114,97 +1129,187 @@
     }
   }
 
-  function fetchPodLogs() {
-    const selectedApp = appSelect.value;
-    const selectedCluster = clusterSelect.value;
-    const selectedBundle = bundleSelect.value;
-    const selectedPod = podSelect.value;
-    
-    if (selectedApp && selectedCluster && selectedBundle && selectedPod) {
-      updateStatusText('Fetching pod logs...');
-      
-      // Show loading message
-      document.querySelector("#log code").innerHTML = `
-Loading logs from pod: ${selectedPod}
-Cluster: ${selectedCluster}
-Bundle: ${selectedBundle}
+// Replace your existing fetchPodLogs function with this updated version
 
-Please wait while we retrieve the latest logs...`;
+function fetchPodLogs() {
+  const selectedApp = appSelect.value;
+  const selectedCluster = clusterSelect.value;
+  const selectedBundle = bundleSelect.value;
+  const selectedPod = podSelect.value;
+  
+  if (selectedApp && selectedCluster && selectedBundle && selectedPod) {
+    updateStatusText('Loading pod logs...');
+    
+    // Show enhanced loading message
+    document.querySelector("#log code").innerHTML = `
+🚀 Loading logs for pod: ${selectedPod}
+📱 Application: ${selectedApp}
+🌐 Cluster: ${selectedCluster}
+📦 Bundle: ${selectedBundle}
+
+⏳ Searching for existing log files...
+⚡ If not found, logs will be auto-generated...
+
+Please wait while we retrieve or generate the latest logs...`;
+    
+    fetch("/get-pod-logs/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: new URLSearchParams({
+        application: selectedApp,
+        cluster: selectedCluster,
+        bundle: selectedBundle,
+        pod: selectedPod
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.logs) {
+        document.querySelector("#log code").innerText = data.logs;
+        
+        // Check if logs were auto-generated and show appropriate status
+        if (data.logs.includes("Source: auto-generated")) {
+          updateStatusText(`✨ Auto-generated logs for ${selectedPod.length > 20 ? selectedPod.substring(0, 17) + '...' : selectedPod}`);
+          showToast(`Logs auto-generated for ${selectedPod}`, "success");
+        } else if (data.logs.includes("Source: kubernetes-api")) {
+          updateStatusText(`🔄 Live logs from K8s for ${selectedPod.length > 20 ? selectedPod.substring(0, 17) + '...' : selectedPod}`);
+          showToast(`Live logs fetched from Kubernetes`, "success");
+        } else {
+          updateStatusText(`📄 Logs loaded for ${selectedPod.length > 20 ? selectedPod.substring(0, 17) + '...' : selectedPod}`);
+          showToast(`Log file loaded successfully`, "success");
+        }
+        
+        testCount++;
+        document.getElementById('test-count').textContent = testCount;
+      } else {
+        document.querySelector("#log code").innerText = data.error || "No logs available for this pod.";
+        updateStatusText('No logs available');
+        showToast('No logs found for this pod', "error");
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching pod logs:', error);
+      document.querySelector("#log code").innerText = `Error fetching pod logs: ${error.message}`;
+      updateStatusText('Error fetching logs');
+      showToast('Failed to fetch pod logs', "error");
+    });
+  } else {
+    updateStatusText('Please select all required fields');
+    showToast('Please select application, cluster, bundle, and pod', "error");
+    
+    // Highlight missing fields
+    if (!selectedApp) appSelect.classList.add('error-state');
+    if (!selectedCluster) clusterSelect.classList.add('error-state');
+    if (!selectedBundle) bundleSelect.classList.add('error-state');
+    if (!selectedPod) podSelect.classList.add('error-state');
+    
+    setTimeout(() => {
+      document.querySelectorAll('.error-state').forEach(el => {
+        el.classList.remove('error-state');
+      });
+    }, 3000);
+  }
+}
+
+  // Enhanced download functionality for logs
+  document.getElementById("download-btn").addEventListener("click", function () {
+    const logContent = document.querySelector("#log code").innerText;
+    
+    // Check if there's valid log content
+    if (!logContent || 
+        logContent === "Welcome to LogOps Testing Portal. Select an application, cluster, bundle, and pod to view logs." ||
+        logContent.includes("Loading logs") ||
+        logContent.includes("Please wait") ||
+        logContent.includes("Waiting for execution") ||
+        logContent.includes("Fetching pod logs")) {
+      updateStatusText("No log data available to download");
+      showToast("No log data available to download", "error");
+      this.classList.add('error-state');
+      setTimeout(() => this.classList.remove('error-state'), 2000);
+      return;
+    }
+    
+    // Set loading state
+    setButtonLoading(this, true);
+    
+    try {
+      // Get current selections for filename
+      const selectedApp = appSelect.value || 'unknown-app';
+      const selectedCluster = clusterSelect.value || 'unknown-cluster';
+      const selectedBundle = bundleSelect.value || 'unknown-bundle';
+      const selectedPod = podSelect.value || 'unknown-pod';
       
-      fetch("/get-pod-logs/", {
+      // Create timestamp for unique filename
+      const now = new Date();
+      const timestamp = now.toISOString().slice(0, 19).replace(/[:.]/g, '-');
+      
+      // Generate descriptive filename
+      const filename = `LogOps_${selectedApp}_${selectedCluster}_${selectedBundle}_${selectedPod}_${timestamp}.log`;
+      
+      // Create download blob
+      const blob = new Blob([logContent], { type: 'text/plain;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create temporary download link
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = filename;
+      downloadLink.style.display = 'none';
+      
+      // Add to DOM, click, and remove
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      // Clean up object URL
+      window.URL.revokeObjectURL(url);
+      
+      // Update status and show success message
+      updateStatusText(`Downloaded: ${filename}`);
+      showToast(`Log file downloaded: ${filename}`, "success");
+      
+      // Track the download on backend
+      fetch("/track-download/", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "X-CSRFToken": getCookie("csrftoken")
         },
         body: new URLSearchParams({
-          application: selectedApp,
+          filename: filename,
+          app: selectedApp,
           cluster: selectedCluster,
           bundle: selectedBundle,
-          pod: selectedPod
+          pod: selectedPod,
+          log_size: logContent.length
         })
-      })
-      .then(res => res.json())
+      }).then(response => response.json())
       .then(data => {
-        if (data.logs) {
-          document.querySelector("#log code").innerText = data.logs;
-          updateStatusText(`Logs loaded for ${selectedPod.length > 20 ? selectedPod.substring(0, 17) + '...' : selectedPod}`);
-          testCount++;
-          document.getElementById('test-count').textContent = testCount;
+        if (data.success) {
+          console.log('Download tracked successfully');
         } else {
-          document.querySelector("#log code").innerText = data.error || "No logs available for this pod.";
-          updateStatusText('No logs available');
+          console.warn('Download tracking failed:', data.error);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching pod logs:', error);
-        document.querySelector("#log code").innerText = `Error fetching pod logs: ${error.message}`;
-        updateStatusText('Error fetching logs');
+      }).catch(error => {
+        console.log('Download tracking failed:', error);
+        // Don't show error to user as download was successful
       });
-    } else {
-      updateStatusText('Please select all required fields');
-      // Highlight missing fields
-      if (!selectedApp) appSelect.classList.add('error-state');
-      if (!selectedCluster) clusterSelect.classList.add('error-state');
-      if (!selectedBundle) bundleSelect.classList.add('error-state');
-      if (!selectedPod) podSelect.classList.add('error-state');
       
-      setTimeout(() => {
-        document.querySelectorAll('.error-state').forEach(el => {
-          el.classList.remove('error-state');
-        });
-      }, 3000);
+    } catch (error) {
+      console.error('Download error:', error);
+      updateStatusText('Download failed');
+      showToast('Failed to download log file', "error");
+    } finally {
+      setButtonLoading(this, false);
     }
-  }
+  });
 
   function downloadCurrentLog() {
-    const logContent = document.querySelector("#log code").innerText;
-    const selectedApp = appSelect.value || 'app';
-    const selectedBundle = bundleSelect.value || 'bundle';
-    const selectedPod = podSelect.value || 'pod';
-    
-    if (logContent && !logContent.includes('Welcome to LogOps')) {
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
-      const filename = `${selectedApp}-${selectedBundle}-${selectedPod}-${timestamp}.log`;
-      
-      const blob = new Blob([logContent], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.style.display = 'none';
-      
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      window.URL.revokeObjectURL(url);
-      
-      updateStatusText(`Downloaded: ${filename}`);
-    } else {
-      updateStatusText('No log data to download');
-    }
+    // This function already exists, redirect to use the new download functionality
+    document.getElementById("download-btn").click();
   }
 
   // CSRF token helper
@@ -1237,6 +1342,34 @@ Please wait while we retrieve the latest logs...`;
       button.innerHTML = originalText;
       button.disabled = false;
     }
+  }
+
+  // Enhanced showToast function
+  function showToast(message, type = 'success') {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+      existingToast.remove();
+    }
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = type === 'success' ? '✅' : '❌';
+    toast.innerHTML = `<span class="toast-icon">${icon}</span>${message}`;
+    
+    // Add to page
+    document.body.appendChild(toast);
+    
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Hide toast after 4 seconds
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
   }
 
   // AI functionality
@@ -1400,6 +1533,10 @@ Please wait...`;
           e.preventDefault();
           document.getElementById('analyze-btn').click();
           break;
+        case 'd':
+          e.preventDefault(); // Prevent browser bookmark shortcut
+          document.getElementById('download-btn').click();
+          break;
       }
     }
   });
@@ -1420,32 +1557,6 @@ Please wait...`;
     
     return isValid;
   }
-  function showToast(message, type = 'success') {
-  // Remove existing toast if any
-  const existingToast = document.querySelector('.toast');
-  if (existingToast) {
-    existingToast.remove();
-  }
-  
-  // Create toast element
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  
-  const icon = type === 'success' ? '✅' : '❌';
-  toast.innerHTML = `<span class="toast-icon">${icon}</span>${message}`;
-  
-  // Add to page
-  document.body.appendChild(toast);
-  
-  // Show toast
-  setTimeout(() => toast.classList.add('show'), 100);
-  
-  // Hide toast after 4 seconds
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
-}
 
   // Error handling
   window.addEventListener('unhandledrejection', function(event) {

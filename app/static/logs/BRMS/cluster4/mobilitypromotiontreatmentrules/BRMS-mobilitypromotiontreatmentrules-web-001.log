@@ -1,0 +1,25 @@
+[2025-06-29 16:01:56] INFO: Starting pod BRMS-mobilitypromotiontreatmentrules-web-001
+[2025-06-29 16:01:57] INFO: Application: BRMS
+[2025-06-29 16:01:58] INFO: Cluster: cluster4
+[2025-06-29 16:01:59] INFO: Bundle: mobilitypromotiontreatmentrules
+[2025-06-29 16:02:00] INFO: Namespace: mobilitypromotiontreatmentrules
+[2025-06-29 16:02:01] INFO: Container image: BRMS:latest
+[2025-06-29 16:02:02] INFO: Initializing container environment...
+[2025-06-29 16:02:04] INFO: Starting HTTP server on port 8080
+[2025-06-29 16:02:06] INFO: Loading static assets and configurations
+[2025-06-29 16:02:08] INFO: Registering routes and middleware
+[2025-06-29 16:02:11] INFO: Web server ready - accepting connections
+[2025-06-29 16:02:16] INFO: Service running normally
+[2025-06-29 16:03:16] INFO: Processed 250 requests in last minute
+[2025-06-29 16:04:16] INFO: Health check passed - all systems green
+[2025-06-29 16:05:16] INFO: Database queries avg response: 45ms
+[2025-06-29 16:06:16] INFO: Cache hit ratio: 94.2%
+[2025-06-29 16:07:16] INFO: Background job completed successfully
+[2025-06-29 16:08:16] INFO: Memory usage: 45% - optimal range
+[2025-06-29 16:09:16] INFO: Request throughput: 4.2 req/sec
+[2025-06-29 17:29:56] INFO: === Recent Activity Summary ===
+[2025-06-29 17:29:57] INFO: Uptime: 1h 28m 15s
+[2025-06-29 17:29:58] INFO: Total requests processed: 15,240
+[2025-06-29 17:29:59] INFO: Current memory usage: 45%
+[2025-06-29 17:30:00] INFO: Current CPU usage: 25%
+[2025-06-29 17:30:01] INFO: Network I/O: 2.1 MB/s in, 3.4 MB/s out

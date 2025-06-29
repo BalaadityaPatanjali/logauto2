@@ -1,0 +1,25 @@
+[2025-06-29 16:02:18] INFO: Starting pod FOBPM-bulkordervalidation-web-001
+[2025-06-29 16:02:19] INFO: Application: FOBPM
+[2025-06-29 16:02:20] INFO: Cluster: cluster1
+[2025-06-29 16:02:21] INFO: Bundle: bulkordervalidation
+[2025-06-29 16:02:22] INFO: Namespace: bulkordervalidation
+[2025-06-29 16:02:23] INFO: Container image: FOBPM:latest
+[2025-06-29 16:02:24] INFO: Initializing container environment...
+[2025-06-29 16:02:26] INFO: Starting HTTP server on port 8080
+[2025-06-29 16:02:28] INFO: Loading static assets and configurations
+[2025-06-29 16:02:30] INFO: Registering routes and middleware
+[2025-06-29 16:02:33] INFO: Web server ready - accepting connections
+[2025-06-29 16:02:38] INFO: Service running normally
+[2025-06-29 16:03:38] INFO: Processed 250 requests in last minute
+[2025-06-29 16:04:38] INFO: Health check passed - all systems green
+[2025-06-29 16:05:38] INFO: Database queries avg response: 45ms
+[2025-06-29 16:06:38] INFO: Cache hit ratio: 94.2%
+[2025-06-29 16:07:38] INFO: Background job completed successfully
+[2025-06-29 16:08:38] INFO: Memory usage: 45% - optimal range
+[2025-06-29 16:09:38] INFO: Request throughput: 4.2 req/sec
+[2025-06-29 17:30:18] INFO: === Recent Activity Summary ===
+[2025-06-29 17:30:19] INFO: Uptime: 1h 28m 15s
+[2025-06-29 17:30:20] INFO: Total requests processed: 15,240
+[2025-06-29 17:30:21] INFO: Current memory usage: 45%
+[2025-06-29 17:30:22] INFO: Current CPU usage: 25%
+[2025-06-29 17:30:23] INFO: Network I/O: 2.1 MB/s in, 3.4 MB/s out

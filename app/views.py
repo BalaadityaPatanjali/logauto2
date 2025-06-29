@@ -3,6 +3,7 @@ import json
 import re
 import requests
 import logging
+import subprocess
 from datetime import datetime
 
 from django.shortcuts import render
@@ -72,9 +73,6 @@ def index(request):
                 context['log'] = f"⏳ Generating logs for {app} - {bundle} on {cluster}...\n\nThis might take a few moments. Please wait."
                 context['log_file_name'] = None
                 logger.warning(f"Log file not found: {simple_log_path}")
-                
-                # You could add actual log generation logic here
-                # generate_logs(app, cluster, bundle, log_file_path)
                 
         except UnicodeDecodeError:
             context['log'] = "❌ Error: Log file contains invalid characters. Please check the file encoding."
@@ -188,7 +186,7 @@ def generate_sample_pods(app, bundle):
 @require_POST
 @csrf_exempt
 def get_pod_logs(request):
-    """Get logs for a specific pod"""
+    """Get logs for a specific pod - auto-generate if not found"""
     try:
         app = request.POST.get('application', '').strip()
         cluster = request.POST.get('cluster', '').strip()
@@ -217,179 +215,194 @@ def get_pod_logs(request):
             logger.debug(f"Returning cached logs for pod {pod}")
             return JsonResponse({"logs": cached_logs})
 
-        # Try to find pod-specific log file
-        log_patterns = [
-            f"{safe_app}-{safe_bundle}-{safe_pod}.log",
+        # Define possible log file locations and patterns
+        logs_base_dir = os.path.join("app", "static", "logs")
+        
+        # Multiple possible log file patterns to search for
+        log_file_patterns = [
+            # Exact pod name match
             f"{safe_pod}.log",
+            # App-pod combination
             f"{safe_app}-{safe_pod}.log",
-            f"{safe_cluster}-{safe_bundle}-{safe_pod}.log"
+            # Bundle-pod combination  
+            f"{safe_bundle}-{safe_pod}.log",
+            # Full combination
+            f"{safe_app}-{safe_bundle}-{safe_pod}.log",
+            f"{safe_cluster}-{safe_bundle}-{safe_pod}.log",
+            # Date-based patterns (if logs have timestamps)
+            f"{safe_pod}-{datetime.now().strftime('%Y-%m-%d')}.log",
+            f"{safe_app}-{safe_pod}-{datetime.now().strftime('%Y-%m-%d')}.log",
+            # Alternative patterns
+            f"{safe_pod}_logs.log",
+            f"pod_{safe_pod}.log",
+            # Generic patterns
+            f"{safe_app}_{safe_bundle}_{safe_pod}.log",
         ]
 
-        logs_dir = os.path.join("app", "static", "logs")
         log_content = None
+        found_log_file = None
 
-        # Try each pattern to find the log file
-        for pattern in log_patterns:
-            log_path = os.path.join(logs_dir, pattern)
-            if os.path.exists(log_path):
-                try:
-                    with open(log_path, "r", encoding='utf-8') as f:
-                        log_content = f.read()
-                    logger.info(f"Successfully loaded pod log file: {log_path}")
-                    break
-                except UnicodeDecodeError:
-                    logger.error(f"Unicode decode error for pod log file: {log_path}")
-                    continue
-                except Exception as e:
-                    logger.error(f"Error reading pod log file {log_path}: {str(e)}")
-                    continue
+        # Search for log files in multiple directories
+        search_directories = [
+            logs_base_dir,
+            os.path.join(logs_base_dir, safe_app),
+            os.path.join(logs_base_dir, safe_cluster), 
+            os.path.join(logs_base_dir, safe_bundle),
+            os.path.join(logs_base_dir, safe_app, safe_cluster),
+            os.path.join(logs_base_dir, safe_app, safe_bundle),
+            os.path.join(logs_base_dir, safe_cluster, safe_bundle),
+            # Add kubernetes-style paths if you're using them
+            os.path.join(logs_base_dir, "kubernetes", safe_cluster),
+            os.path.join(logs_base_dir, "pods"),
+        ]
 
-        # If no specific pod log found, generate sample log content
-        if log_content is None:
-            log_content = generate_sample_pod_logs(app, bundle, pod)
-            logger.info(f"Generated sample logs for pod {pod}")
+        # Try each directory and pattern combination
+        for directory in search_directories:
+            if not os.path.exists(directory):
+                continue
+                
+            for pattern in log_file_patterns:
+                log_path = os.path.join(directory, pattern)
+                
+                if os.path.exists(log_path):
+                    try:
+                        # Check if file is not empty and recently modified
+                        file_stats = os.stat(log_path)
+                        if file_stats.st_size == 0:
+                            logger.warning(f"Log file is empty: {log_path}")
+                            continue
+                            
+                        with open(log_path, "r", encoding='utf-8') as f:
+                            log_content = f.read()
+                            
+                        if log_content.strip():  # Ensure content is not just whitespace
+                            found_log_file = log_path
+                            logger.info(f"Successfully loaded pod log file: {log_path}")
+                            break
+                            
+                    except UnicodeDecodeError:
+                        logger.error(f"Unicode decode error for pod log file: {log_path}")
+                        continue
+                    except Exception as e:
+                        logger.error(f"Error reading pod log file {log_path}: {str(e)}")
+                        continue
+            
+            if log_content:
+                break
+
+        # If no log file found, try to fetch from Kubernetes API (if available)
+        if not log_content:
+            log_content = fetch_kubernetes_logs(safe_app, safe_cluster, safe_bundle, safe_pod)
+            if log_content:
+                found_log_file = "kubernetes-api"
+
+        # AUTO-GENERATE: If still no logs found, automatically generate them
+        if not log_content:
+            logger.info(f"No existing log file found for {pod}, auto-generating...")
+            
+            # Generate log content automatically
+            log_content = auto_generate_pod_logs(app, cluster, bundle, pod)
+            
+            # Save the generated log to file for future use
+            auto_save_generated_logs(safe_app, safe_cluster, safe_bundle, safe_pod, log_content)
+            
+            found_log_file = "auto-generated"
+            logger.info(f"Auto-generated logs for pod {pod}")
+
+        # Add metadata to logs for debugging
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_metadata = f"""# LogOps - Log File Viewer
+# Loaded: {timestamp}
+# Source: {found_log_file}
+# Pod: {pod}
+# Application: {app}
+# Cluster: {cluster}
+# Bundle: {bundle}
+# ====================================
+
+"""
+        
+        final_log_content = log_metadata + log_content
 
         # Cache the logs for a short time (30 seconds)
-        cache.set(cache_key, log_content, 30)
+        cache.set(cache_key, final_log_content, 30)
         
-        return JsonResponse({"logs": log_content})
+        return JsonResponse({"logs": final_log_content})
 
     except Exception as e:
         logger.error(f"Error getting pod logs: {str(e)}")
         return JsonResponse({
             "error": f"Failed to get pod logs: {str(e)}",
-            "logs": ""
+            "logs": f"Error loading logs for pod {pod}: {str(e)}"
         }, status=500)
 
 
+def fetch_kubernetes_logs(app, cluster, bundle, pod):
+    """
+    Optional: Fetch logs directly from Kubernetes API
+    This function can be implemented if you have kubectl access or k8s python client
+    """
+    try:
+        # Example using kubectl command (if available)
+        # Construct kubectl command
+        kubectl_cmd = [
+            'kubectl', 'logs', 
+            pod, 
+            '-n', bundle,  # assuming bundle is the namespace
+            '--tail=1000'  # get last 1000 lines
+        ]
+        
+        # Add context if cluster is specified
+        if cluster and cluster != 'default':
+            kubectl_cmd.extend(['--context', cluster])
+        
+        logger.info(f"Attempting to fetch logs via kubectl: {' '.join(kubectl_cmd)}")
+        
+        # Execute kubectl command
+        result = subprocess.run(
+            kubectl_cmd, 
+            capture_output=True, 
+            text=True, 
+            timeout=30
+        )
+        
+        if result.returncode == 0:
+            logger.info(f"Successfully fetched logs from Kubernetes for pod {pod}")
+            return result.stdout
+        else:
+            logger.warning(f"kubectl command failed: {result.stderr}")
+            return None
+            
+    except subprocess.TimeoutExpired:
+        logger.error("Kubectl command timed out")
+        return None
+    except FileNotFoundError:
+        logger.debug("kubectl not found - skipping Kubernetes API fetch")
+        return None
+    except Exception as e:
+        logger.error(f"Error fetching Kubernetes logs: {str(e)}")
+        return None
+
+
 def generate_sample_pod_logs(app, bundle, pod):
-    """Generate sample log content for demo purposes with both success and failure scenarios"""
+    """Generate sample log content ONLY as a last resort fallback - NOT USED ANYMORE"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # Generate different log scenarios based on pod name patterns
-    if "error" in pod.lower() or "fail" in pod.lower() or "002" in pod:
-        # Generate failure logs for testing RCA
-        sample_logs = f"""[{timestamp}] INFO: Pod {pod} starting up...
+    return f"""# DEMO MODE - Sample Logs Generated
+# Real log files not found for pod: {pod}
+# This is sample content for demonstration purposes
+# ====================================
+
+[{timestamp}] INFO: Pod {pod} - Demo mode active
 [{timestamp}] INFO: Application: {app}
 [{timestamp}] INFO: Bundle: {bundle}
-[{timestamp}] INFO: Initializing container...
-[{timestamp}] INFO: Loading configuration...
-[{timestamp}] ERROR: Failed to connect to database at db.{bundle}.svc.cluster.local:5432
-[{timestamp}] ERROR: Connection timeout after 30 seconds
-[{timestamp}] WARN: Retrying database connection (attempt 1/3)...
-[{timestamp}] ERROR: Connection failed: FATAL: password authentication failed for user "{app}_user"
-[{timestamp}] WARN: Retrying database connection (attempt 2/3)...
-[{timestamp}] ERROR: Connection failed: FATAL: database "{bundle}_db" does not exist
-[{timestamp}] WARN: Retrying database connection (attempt 3/3)...
-[{timestamp}] ERROR: Connection failed: connection to server at "db.{bundle}.svc.cluster.local" (10.96.0.15), port 5432 failed
-[{timestamp}] FATAL: Unable to establish database connection after 3 attempts
-[{timestamp}] ERROR: Application startup failed
-[{timestamp}] ERROR: Container exit code: 1
-
---- Error Details ---
-[{timestamp}] ERROR: DatabaseConnectionError: Could not connect to PostgreSQL database
-[{timestamp}] ERROR: Stack trace:
-  at DatabaseConnector.connect() /app/src/db/connector.js:45
-  at Application.initialize() /app/src/app.js:23
-  at startup() /app/src/index.js:12
-[{timestamp}] ERROR: Environment variables check:
-  DB_HOST: db.{bundle}.svc.cluster.local ✓
-  DB_PORT: 5432 ✓
-  DB_USER: {app}_user ✓
-  DB_PASSWORD: [REDACTED] ✗ (possibly incorrect)
-  DB_NAME: {bundle}_db ✗ (database does not exist)
-
---- Pod Status ---
-Status: CrashLoopBackOff
-Uptime: 0m 45s
-Restart Count: 5
-Last Exit Code: 1
-Node: worker-node-002
-Namespace: {bundle}
-Image: {app}:v1.2.3-broken
-"""
-    elif "warn" in pod.lower() or "worker" in pod.lower():
-        # Generate warning logs with performance issues
-        sample_logs = f"""[{timestamp}] INFO: Pod {pod} starting up...
-[{timestamp}] INFO: Application: {app}
-[{timestamp}] INFO: Bundle: {bundle}
-[{timestamp}] INFO: Initializing container...
-[{timestamp}] INFO: Loading configuration...
-[{timestamp}] INFO: Connecting to database...
-[{timestamp}] WARN: Database connection slow (5.2s response time)
-[{timestamp}] INFO: Database connection established
-[{timestamp}] INFO: Starting web server on port 8080...
-[{timestamp}] INFO: Health check endpoint available at /health
-[{timestamp}] WARN: Application startup took 12.3 seconds (expected < 10s)
-[{timestamp}] INFO: Application ready to serve requests
-[{timestamp}] INFO: Pod {pod} is running
-[{timestamp}] WARN: Memory usage: 1.8GB (approaching 2GB limit)
-[{timestamp}] WARN: CPU usage: 85% (high load detected)
-[{timestamp}] ERROR: Failed to process job #1247: timeout after 30s
-[{timestamp}] WARN: Queue backlog growing: 45 pending jobs
-[{timestamp}] ERROR: OutOfMemoryError in worker thread #3
-[{timestamp}] WARN: Garbage collection taking longer than usual (2.1s)
-[{timestamp}] ERROR: HTTP 500 Internal Server Error for /api/process-data
-[{timestamp}] WARN: Response times degrading: avg 2.8s (SLA: < 1s)
-
---- Recent Activity ---
-[{timestamp}] WARN: High error rate detected: 15% (threshold: 5%)
-[{timestamp}] ERROR: Redis connection pool exhausted
-[{timestamp}] WARN: Scaling recommendation: increase memory limit to 3GB
-[{timestamp}] ERROR: Failed to send notification: SMTP timeout
-
---- Pod Status ---
-Status: Running (Degraded)
-Uptime: 1h 23m 15s
-Restart Count: 2
-Node: worker-node-003
-Namespace: {bundle}
-Image: {app}:latest
-Memory Usage: 90% of 2GB limit
-CPU Usage: 85%
-"""
-    else:
-        # Generate successful logs
-        sample_logs = f"""[{timestamp}] INFO: Pod {pod} starting up...
-[{timestamp}] INFO: Application: {app}
-[{timestamp}] INFO: Bundle: {bundle}
-[{timestamp}] INFO: Initializing container...
-[{timestamp}] INFO: Loading configuration...
-[{timestamp}] INFO: Connecting to database...
-[{timestamp}] INFO: Database connection established in 1.2s
-[{timestamp}] INFO: Starting web server on port 8080...
-[{timestamp}] INFO: Health check endpoint available at /health
-[{timestamp}] INFO: Application ready to serve requests in 3.4s
-[{timestamp}] INFO: Pod {pod} is running successfully
-[{timestamp}] DEBUG: Memory usage: 256MB (12% of 2GB limit)
-[{timestamp}] DEBUG: CPU usage: 5%
-[{timestamp}] INFO: Processed 150 requests in the last minute
-[{timestamp}] INFO: All systems operational
-[{timestamp}] INFO: Database queries avg response time: 45ms
-[{timestamp}] INFO: Cache hit ratio: 94%
-
---- Recent Activity ---
-[{timestamp}] INFO: Received GET request to /api/status
-[{timestamp}] INFO: Response sent with status 200 (12ms)
-[{timestamp}] INFO: Received POST request to /api/data
-[{timestamp}] INFO: Data processed successfully (89ms)
-[{timestamp}] INFO: Response sent with status 201
-[{timestamp}] INFO: Background job completed: data-sync-{bundle}
-[{timestamp}] INFO: Health check passed: all dependencies healthy
-
---- Pod Status ---
-Status: Running
-Uptime: 2h 45m 30s
-Restart Count: 0
-Node: worker-node-001
-Namespace: {bundle}
-Image: {app}:latest
-Memory Usage: 12% of 2GB limit
-CPU Usage: 5%
-Disk Usage: 35% of 10GB
-"""
-
-    return sample_logs
+[{timestamp}] WARN: Real log files should be placed in /app/static/logs/
+[{timestamp}] INFO: Expected log file patterns:
+[{timestamp}] INFO: - {pod}.log
+[{timestamp}] INFO: - {app}-{pod}.log  
+[{timestamp}] INFO: - {bundle}-{pod}.log
+[{timestamp}] INFO: Please contact your administrator to configure proper log file access
+[{timestamp}] INFO: Demo pod {pod} simulated successfully"""
 
 
 @require_POST
@@ -638,6 +651,148 @@ DevOps Automation System
     }, status=405)
 
 
+@require_POST
+@csrf_exempt
+def track_download(request):
+    """
+    Track log file downloads for analytics and auditing
+    """
+    try:
+        filename = request.POST.get('filename', '').strip()
+        app = request.POST.get('app', '').strip()
+        cluster = request.POST.get('cluster', '').strip()
+        bundle = request.POST.get('bundle', '').strip()
+        pod = request.POST.get('pod', '').strip()
+        log_size = request.POST.get('log_size', '0').strip()
+        
+        # Validate required parameters
+        if not filename:
+            return JsonResponse({
+                'success': False,
+                'error': 'Filename is required'
+            }, status=400)
+        
+        # Sanitize inputs for logging
+        safe_filename = sanitize_filename(filename)
+        safe_app = sanitize_filename(app) if app else 'unknown'
+        safe_cluster = sanitize_filename(cluster) if cluster else 'unknown'
+        safe_bundle = sanitize_filename(bundle) if bundle else 'unknown'
+        safe_pod = sanitize_filename(pod) if pod else 'unknown'
+        
+        # Convert log_size to integer, default to 0 if invalid
+        try:
+            file_size = int(log_size)
+        except (ValueError, TypeError):
+            file_size = 0
+        
+        # Get client information
+        client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+        user_agent = request.META.get('HTTP_USER_AGENT', 'unknown')
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Log the download event with detailed information
+        logger.info(
+            f"LOG_DOWNLOAD: {safe_filename} | "
+            f"App: {safe_app} | "
+            f"Cluster: {safe_cluster} | "
+            f"Bundle: {safe_bundle} | "
+            f"Pod: {safe_pod} | "
+            f"Size: {file_size} bytes | "
+            f"IP: {client_ip} | "
+            f"Time: {timestamp}"
+        )
+        
+        # Create download statistics for cache/tracking
+        download_stats = {
+            'filename': safe_filename,
+            'application': safe_app,
+            'cluster': safe_cluster,
+            'bundle': safe_bundle,
+            'pod': safe_pod,
+            'file_size': file_size,
+            'client_ip': client_ip,
+            'user_agent': user_agent[:200],  # Truncate long user agents
+            'timestamp': timestamp
+        }
+        
+        # Store in cache for recent downloads tracking (optional)
+        recent_downloads_key = f"recent_downloads_{client_ip}"
+        recent_downloads = cache.get(recent_downloads_key, [])
+        recent_downloads.append(download_stats)
+        
+        # Keep only last 10 downloads per IP
+        if len(recent_downloads) > 10:
+            recent_downloads = recent_downloads[-10:]
+        
+        # Cache for 1 hour
+        cache.set(recent_downloads_key, recent_downloads, 3600)
+        
+        # Update download counter in cache
+        download_counter_key = "total_downloads_today"
+        today = datetime.now().strftime('%Y-%m-%d')
+        daily_counter_key = f"downloads_{today}"
+        
+        # Increment counters
+        cache.set(download_counter_key, cache.get(download_counter_key, 0) + 1, 86400)  # 24 hours
+        cache.set(daily_counter_key, cache.get(daily_counter_key, 0) + 1, 86400)
+        
+        logger.info(f"Download tracking completed for {safe_filename}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Download tracked successfully',
+            'download_id': f"{safe_app}_{safe_pod}_{timestamp.replace(' ', '_').replace(':', '')}"
+        })
+        
+    except Exception as e:
+        logger.error(f"Error tracking download: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to track download: {str(e)}'
+        }, status=500)
+
+
+@csrf_exempt
+def get_download_stats(request):
+    """
+    Get download statistics (optional endpoint for analytics)
+    """
+    try:
+        # Get client IP for recent downloads
+        client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+        
+        # Get recent downloads for this IP
+        recent_downloads_key = f"recent_downloads_{client_ip}"
+        recent_downloads = cache.get(recent_downloads_key, [])
+        
+        # Get daily statistics
+        today = datetime.now().strftime('%Y-%m-%d')
+        daily_counter_key = f"downloads_{today}"
+        total_today = cache.get(daily_counter_key, 0)
+        
+        # Get total downloads counter
+        total_downloads = cache.get("total_downloads_today", 0)
+        
+        stats = {
+            'recent_downloads': recent_downloads[-5:],  # Last 5 downloads
+            'downloads_today': total_today,
+            'total_downloads': total_downloads,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting download stats: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to get download stats: {str(e)}'
+        }, status=500)
+
+
 @csrf_exempt
 def get_app_config(request):
     """Serve app configuration with caching for better performance"""
@@ -684,7 +839,6 @@ def get_app_config(request):
         }, status=500)
 
 
-# Optional: Add a health check endpoint
 @csrf_exempt
 def health_check(request):
     """Simple health check endpoint"""
@@ -707,6 +861,15 @@ def health_check(request):
         # Check email configuration
         email_configured = bool(getattr(settings, 'EMAIL_HOST', '')) and bool(getattr(settings, 'EMAIL_HOST_USER', ''))
         
+        # Count existing log files
+        log_files_count = 0
+        if logs_dir_exists:
+            try:
+                for root, dirs, files in os.walk(logs_dir):
+                    log_files_count += len([f for f in files if f.endswith('.log')])
+            except Exception:
+                log_files_count = 0
+        
         status = {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
@@ -715,7 +878,8 @@ def health_check(request):
                 "app_config_exists": config_exists,
                 "logs_directory_exists": logs_dir_exists,
                 "pods_config_exists": pods_config_exists,
-                "email_configured": email_configured
+                "email_configured": email_configured,
+                "log_files_count": log_files_count
             }
         }
         
@@ -731,3 +895,140 @@ def health_check(request):
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }, status=500)
+    
+def auto_generate_pod_logs(app, cluster, bundle, pod):
+    """
+    Automatically generate realistic log content for a pod
+    """
+    from datetime import timedelta
+    
+    base_time = datetime.now() - timedelta(hours=1, minutes=30)
+    logs = []
+    
+    # Add startup sequence
+    logs.append(f"[{base_time.strftime('%Y-%m-%d %H:%M:%S')}] INFO: Starting pod {pod}")
+    logs.append(f"[{(base_time + timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Application: {app}")
+    logs.append(f"[{(base_time + timedelta(seconds=2)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Cluster: {cluster}")
+    logs.append(f"[{(base_time + timedelta(seconds=3)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Bundle: {bundle}")
+    logs.append(f"[{(base_time + timedelta(seconds=4)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Namespace: {bundle}")
+    logs.append(f"[{(base_time + timedelta(seconds=5)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Container image: {app}:latest")
+    logs.append(f"[{(base_time + timedelta(seconds=6)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Initializing container environment...")
+    
+    # Add service-specific startup based on pod name patterns
+    if any(x in pod.lower() for x in ['web', 'frontend', 'nginx', 'ui']):
+        logs.extend([
+            f"[{(base_time + timedelta(seconds=8)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Starting HTTP server on port 8080",
+            f"[{(base_time + timedelta(seconds=10)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Loading static assets and configurations",
+            f"[{(base_time + timedelta(seconds=12)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Registering routes and middleware",
+            f"[{(base_time + timedelta(seconds=15)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Web server ready - accepting connections"
+        ])
+    elif any(x in pod.lower() for x in ['api', 'service', 'gateway']):
+        logs.extend([
+            f"[{(base_time + timedelta(seconds=8)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Loading API configuration",
+            f"[{(base_time + timedelta(seconds=9)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Connecting to database...",
+            f"[{(base_time + timedelta(seconds=11)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Database connection established",
+            f"[{(base_time + timedelta(seconds=13)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Registering API endpoints",
+            f"[{(base_time + timedelta(seconds=15)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: API server ready on port 3000"
+        ])
+    elif any(x in pod.lower() for x in ['worker', 'processor', 'job']):
+        logs.extend([
+            f"[{(base_time + timedelta(seconds=8)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Connecting to message queue",
+            f"[{(base_time + timedelta(seconds=10)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Registering job handlers",
+            f"[{(base_time + timedelta(seconds=12)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Starting worker processes",
+            f"[{(base_time + timedelta(seconds=15)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Worker ready to process jobs"
+        ])
+    else:
+        # Generic service startup
+        logs.extend([
+            f"[{(base_time + timedelta(seconds=8)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Loading service configuration",
+            f"[{(base_time + timedelta(seconds=10)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Initializing service components",
+            f"[{(base_time + timedelta(seconds=12)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Service health check passed",
+            f"[{(base_time + timedelta(seconds=15)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Service ready and operational"
+        ])
+    
+    # Add operational logs based on pod name patterns
+    current_time = base_time + timedelta(seconds=20)
+    
+    if "error" in pod.lower():
+        # Generate error scenario
+        logs.extend([
+            f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] INFO: Processing incoming requests...",
+            f"[{(current_time + timedelta(seconds=30)).strftime('%Y-%m-%d %H:%M:%S')}] WARN: High memory usage detected: 85%",
+            f"[{(current_time + timedelta(seconds=60)).strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Database connection timeout after 30s",
+            f"[{(current_time + timedelta(seconds=90)).strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Failed to process request: connection refused",
+            f"[{(current_time + timedelta(seconds=120)).strftime('%Y-%m-%d %H:%M:%S')}] WARN: Retrying database connection (attempt 1/3)",
+            f"[{(current_time + timedelta(seconds=150)).strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Authentication failed: invalid credentials",
+            f"[{(current_time + timedelta(seconds=180)).strftime('%Y-%m-%d %H:%M:%S')}] FATAL: Critical error - service unavailable",
+            f"[{(current_time + timedelta(seconds=200)).strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Container exit code: 1"
+        ])
+    elif "warn" in pod.lower():
+        # Generate warning scenario
+        logs.extend([
+            f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] INFO: Service operational - processing requests",
+            f"[{(current_time + timedelta(seconds=45)).strftime('%Y-%m-%d %H:%M:%S')}] WARN: High CPU usage detected: 78%",
+            f"[{(current_time + timedelta(seconds=90)).strftime('%Y-%m-%d %H:%M:%S')}] WARN: Response time degradation: 2.8s (SLA: 1s)",
+            f"[{(current_time + timedelta(seconds=135)).strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Failed to send notification: SMTP timeout",
+            f"[{(current_time + timedelta(seconds=180)).strftime('%Y-%m-%d %H:%M:%S')}] WARN: Queue backlog growing: 150 pending items",
+            f"[{(current_time + timedelta(seconds=225)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Auto-scaling triggered - adding 2 replicas",
+            f"[{(current_time + timedelta(seconds=270)).strftime('%Y-%m-%d %H:%M:%S')}] WARN: Memory usage approaching limit: 92%",
+            f"[{(current_time + timedelta(seconds=315)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Performance stabilized after scaling"
+        ])
+    else:
+        # Generate normal operational logs
+        logs.extend([
+            f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] INFO: Service running normally",
+            f"[{(current_time + timedelta(seconds=60)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Processed 250 requests in last minute",
+            f"[{(current_time + timedelta(seconds=120)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Health check passed - all systems green",
+            f"[{(current_time + timedelta(seconds=180)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Database queries avg response: 45ms",
+            f"[{(current_time + timedelta(seconds=240)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Cache hit ratio: 94.2%",
+            f"[{(current_time + timedelta(seconds=300)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Background job completed successfully",
+            f"[{(current_time + timedelta(seconds=360)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Memory usage: 45% - optimal range",
+            f"[{(current_time + timedelta(seconds=420)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Request throughput: 4.2 req/sec"
+        ])
+    
+    # Add recent activity summary
+    recent_time = datetime.now() - timedelta(minutes=2)
+    logs.extend([
+        f"[{recent_time.strftime('%Y-%m-%d %H:%M:%S')}] INFO: === Recent Activity Summary ===",
+        f"[{(recent_time + timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Uptime: 1h 28m 15s",
+        f"[{(recent_time + timedelta(seconds=2)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Total requests processed: 15,240",
+        f"[{(recent_time + timedelta(seconds=3)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Current memory usage: {45 if 'error' not in pod else 95}%",
+        f"[{(recent_time + timedelta(seconds=4)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Current CPU usage: {25 if 'error' not in pod else 98}%",
+        f"[{(recent_time + timedelta(seconds=5)).strftime('%Y-%m-%d %H:%M:%S')}] INFO: Network I/O: 2.1 MB/s in, 3.4 MB/s out"
+    ])
+    
+    return "\n".join(logs)
+
+
+def auto_save_generated_logs(app, cluster, bundle, pod, log_content):
+    """
+    Save auto-generated logs to file for future access
+    """
+    try:
+        # Create logs directory structure
+        logs_dir = os.path.join("app", "static", "logs")
+        pods_dir = os.path.join(logs_dir, "pods")
+        
+        # Ensure directories exist
+        os.makedirs(pods_dir, exist_ok=True)
+        
+        # Save in flat structure for easy access
+        flat_filename = f"{app}-{bundle}-{pod}.log"
+        flat_path = os.path.join(pods_dir, flat_filename)
+        
+        with open(flat_path, 'w', encoding='utf-8') as f:
+            f.write(log_content)
+        
+        # Also save in hierarchical structure
+        hierarchical_dir = os.path.join(logs_dir, app, cluster, bundle)
+        os.makedirs(hierarchical_dir, exist_ok=True)
+        
+        hierarchical_path = os.path.join(hierarchical_dir, f"{pod}.log")
+        with open(hierarchical_path, 'w', encoding='utf-8') as f:
+            f.write(log_content)
+        
+        logger.info(f"Auto-saved generated logs to {flat_path} and {hierarchical_path}")
+        
+    except Exception as e:
+        logger.warning(f"Failed to save auto-generated logs: {str(e)}")
+        # Don't fail the request if we can't save the file
